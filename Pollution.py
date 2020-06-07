@@ -1,4 +1,5 @@
 import numpy as np
+import math
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
@@ -9,7 +10,7 @@ class Point:
     """
 
 
-    def __init__(self, label, actual_pollution_value, x):
+    def __init__(self, label, actual_pollution_value, x, pollution_value = float('NaN')):
         """
         Creates a Point Object
         :param label: Label of point ex:005, 015, 995
@@ -17,11 +18,14 @@ class Point:
         """
         self.label = label
         # self.actual_pollution_value = actual_pollution_value
-        self.pollution_value = actual_pollution_value
+        self.pollution_value = pollution_value
+
+        self.actual_pollution_value = actual_pollution_value
 
         self.x = x
 
         self.y = 0
+
 
 
     def __str__(self):
@@ -46,13 +50,27 @@ class Point:
         """
         return [self.x,self.y]
 
+    def read_pollution_value(self):
+        """
+        Generates pollution value using actual pollution value. Currently it just assigns pollution value = actual_polution_value
+        :return: Nothing
+        """
+        if not math.isnan(self.pollution_value):
+            raise Exception("Just tried to read a pollution value from a point with a assigned pollution_value")
+        self.pollution_value = self.actual_pollution_value
+
     def copy(self):
-        return Point(self.label,self.get_pollution_value(),self.x)
+        return Point(self.label,self.get_pollution_value(),self.x, self.get_pollution_value())
+
+    def get_actual_pollution_value(self):
+        return self.actual_pollution_value
 
 def copy_dictionary_with_points(points):
     new_dict = {}
     for key, value in points.items():
         new_dict[key] = value.copy()
+
+    return new_dict
 
 def create_map_of_random_pollution_points(length, mean, std):
     """
@@ -64,12 +82,12 @@ def create_map_of_random_pollution_points(length, mean, std):
     """
     new_map = {}
     x = 5
-    for i in range(0,100):
+    for i in range(0,length):
         new_map[i] = (Point(i,np.random.normal(mean,std),x))
         x = x+10
     return new_map
 
-def interpolate_points(known_points, wanted_point_positions):
+def interpolate_points_using_posistions(known_points, wanted_point_positions):
     """
     Predicts points based on known data using Kriging (Gaussian Processes)
     :param known_points: list of points
@@ -84,7 +102,7 @@ def interpolate_points(known_points, wanted_point_positions):
     known_points_position_list = to_list_of_posistions(known_points)
 
     pollution_value_list = [] #converts point list into a list of pollution values
-    for point in known_points:
+    for point in known_points.values():
         pollution_value_list.append(point.get_pollution_value())
 
     gp.fit(known_points_position_list,pollution_value_list) #Fits model to data
@@ -106,31 +124,33 @@ def pick_uniform_random_points(points, pick_number ):
 
     new_map  = {}
     for i in random_picks:
-        new_map[i] = Point(i,points.get(i).get_pollution_value,points.get(i).get_x_cord)
+        new_map[i] = Point(i,points.get(i).get_actual_pollution_value(),points.get(i).get_x_cord())
+        new_map.get(i).read_pollution_value()
 
     return new_map
 
-def interpoate_unknown_points(known_points, all_points):
+def interpolate_unknown_points(known_points, all_points):
     unkown_posistions = []
     unkown_labels = []
     for i in range(0,len(all_points)):
         if not (i in known_points):
-            unkown_posistions.append(all_points.get(i).get_posistion)
+            unkown_posistions.append(all_points.get(i).get_position())
             unkown_labels.append(i)
 
-    interpolated_pollution_values = interpolate_points(known_points, unkown_posistions)
+    interpolated_pollution_values = interpolate_points_using_posistions(known_points, unkown_posistions)
 
     interpolated_map = copy_dictionary_with_points(known_points)
 
     for i in range(0,len(unkown_labels)):
-        interpolated_map[unkown_labels[i]] = all_points.get(unkown_labels[i]).copy().set_pollution_value(interpolated_pollution_values[i])
+        interpolated_map[unkown_labels[i]] = all_points.get(unkown_labels[i]).copy()
+        interpolated_map[unkown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
 
     return interpolated_map
 
 
 def to_list_of_posistions(points):
     points_position_list = []  # converts point list into a list of [x,y] values
-    for point in points:
+    for point in points.values():
         points_position_list.append(point.get_position())
 
     return points_position_list
@@ -140,7 +160,11 @@ def to_list_of_posistions(points):
 
 
 random_points1 = create_map_of_random_pollution_points(10,100,10)
-pick_known_points(random_points1,5)
+p = pick_uniform_random_points(random_points1,5)
+
+a = interpolate_unknown_points(p,random_points1)
+
+
 
 random_points = create_map_of_random_pollution_points(10,100,10).values()
 
@@ -150,7 +174,7 @@ for i in random_points:
     test.append(i.get_pollution_value())
 
 testNP = np.array(test)
-prediction = interpolate_points(random_points, [[100, 0], [3, 0]])
+prediction = interpolate_points_using_posistions(random_points, [[100, 0], [3, 0]])
 prediction_list = prediction.tolist()
 print(prediction_list)
 
