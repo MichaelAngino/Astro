@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
@@ -232,6 +233,10 @@ def root_mean_square_error(points):
     rmse = math.sqrt(sum / len(points))
     return rmse
 
+
+def plot_numbers(rmse_list, num_picked_points_list):
+    plt.plot(num_picked_points_list, rmse_list)
+    plt.show()
 
 # print(Point(1, 1, 1))
 #
