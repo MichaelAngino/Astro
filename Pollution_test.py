@@ -37,10 +37,10 @@ class MyTestCase(unittest.TestCase):
 
         test_points = Pollution.create_points_with_random_pollution(10,10,1)
         counter = defaultdict(int)
-        num_of_runs = 1000
+        num_of_runs = 10000
 
         for i in range(0,num_of_runs):
-            a = Pollution.pick_uniform_random_points(test_points, 10)
+            a = Pollution.pick_uniform_random_points(test_points, 5)
             for key in a.keys():
                 counter[key] = counter[key]+1
 
@@ -48,7 +48,7 @@ class MyTestCase(unittest.TestCase):
             counter[key] = counter[key]/ num_of_runs
 
         for i in range(0,9):
-            self.assertAlmostEqual(.1, counter[i],3)
+            self.assertAlmostEqual(.5, counter[i],None,None,.02)
 
 
 

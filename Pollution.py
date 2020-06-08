@@ -138,8 +138,13 @@ def pick_uniform_random_points(points, pick_number ):
     :return: A new map with the picked points {label: point}
     """
     random = np.random.default_rng()
-    random_picks = random.integers(0,len(points),pick_number) # picks uniform random numbers
 
+    random_picks = []
+
+    while len(random_picks) < pick_number:
+        random_num = random.integers(0,len(points)) # picks uniform random number
+        if not random_num in random_picks:
+            random_picks.append(random_num)
     new_map  = {}
     for i in random_picks: #assigns and copies picked points into a new dictionary
         new_map[i] = Point(i,points.get(i).get_actual_pollution_value(),points.get(i).get_x_cord())
@@ -186,12 +191,12 @@ def to_list_of_posistions(points):
 
 
 
-
-
-random_points1 = create_points_with_random_pollution(10, 100, 10)
-p = pick_uniform_random_points(random_points1,5)
-
-a = interpolate_unknown_points(p,random_points1)
+#
+#
+# random_points1 = create_points_with_random_pollution(10, 100, 10)
+# p = pick_uniform_random_points(random_points1,5)
+#
+# a = interpolate_unknown_points(p,random_points1)
 
 
 
