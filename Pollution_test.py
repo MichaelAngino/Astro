@@ -104,13 +104,6 @@ class MyTestCase(unittest.TestCase):
         test_picked_points = Pollution.pick_uniform_random_points(test_points, 100)
         test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
         self.assertEqual(100, len(test_points))
-        for i in range(0, len(test_points)):
-            self.assertEqual(100, test_points[i].get_actual_pollution_value())
-        for label, point in test_picked_points.items():
-            self.assertEqual(test_picked_points[label].get_pollution_value(),
-                             test_interpolated_points[label].get_pollution_value())
-        for label, point in test_points.items():
-            self.assertEqual(test_points[label].get_actual_pollution_value(),
-                             test_interpolated_points[label].get_actual_pollution_value())
+
         test_rmse = Pollution.root_mean_square_error(test_interpolated_points)
         self.assertEqual(0.0, test_rmse)
