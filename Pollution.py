@@ -1,10 +1,12 @@
 import numpy as np
 import math
+import matplotlib
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
-#test comment
+
+# test comment
 
 class Point:
     """
@@ -147,7 +149,7 @@ def pick_uniform_random_points(points, pick_number):
 
     while len(random_picks) < pick_number:
         random_num = random.integers(0, len(points))  # picks uniform random number
-        if not random_num in random_picks: #Checks to make sure number hasnt been picked yet
+        if not random_num in random_picks:  # Checks to make sure number hasnt been picked yet
             random_picks.append(random_num)
     new_map = {}
     for i in random_picks:  # assigns and copies picked points into a new dictionary
@@ -155,6 +157,7 @@ def pick_uniform_random_points(points, pick_number):
         new_map.get(i).read_pollution_value()
 
     return new_map
+
 
 def pick_poisson_random_points(points, pick_number, lam):
     """
@@ -170,7 +173,8 @@ def pick_poisson_random_points(points, pick_number, lam):
 
     while len(random_picks) < pick_number:
         random_num = random.poisson(lam)  # picks poisson random number
-        if not random_num in random_picks and random_num>0 and random_num< len(points):  # Checks to make sure number hasnt been picked yet and is within range
+        if not random_num in random_picks and random_num > 0 and random_num < len(
+                points):  # Checks to make sure number hasnt been picked yet and is within range
             random_picks.append(random_num)
     new_map = {}
     for i in random_picks:  # assigns and copies picked points into a new dictionary
@@ -189,7 +193,8 @@ def interpolate_unknown_points(known_points, all_points):
     """
     unknown_positions = []
     unknown_labels = []
-    for i in range(0, len(all_points)):  # Creates a list of posistions of points that have not been measured and a list of their respective labels
+    for i in range(0, len(
+            all_points)):  # Creates a list of posistions of points that have not been measured and a list of their respective labels
         if not (i in known_points):
             unknown_positions.append(all_points.get(i).get_position())
             unknown_labels.append(i)
@@ -232,6 +237,27 @@ def root_mean_square_error(points):
     rmse = math.sqrt(sum / len(points))
     return rmse
 
+
+def run_interpolation_with_various_betas(points):
+    """
+    Runs Interpolation with number of picked points(beta) from 1 - all points picked and using uniform distribution in the picking
+    """
+
+    data = []
+
+    for i in range(1, len(
+            points) + 1):  # runs through all number of picked points starting at 1 and ending with all points picked
+        sum_rmse = 0
+        for j in range(0, 5): # runs every interpolation with a certain beta 5 times and averages the results
+            picked_points = pick_uniform_random_points(points, i)
+            interpolated_points = interpolate_unknown_points(picked_points, points)
+            sum_rmse = sum_rmse + root_mean_square_error(interpolated_points)
+        data.append(sum_rmse / 5)
+
+
+
+
+    return data
 
 # print(Point(1, 1, 1))
 #

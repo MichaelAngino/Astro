@@ -107,3 +107,8 @@ class MyTestCase(unittest.TestCase):
 
         test_rmse = Pollution.root_mean_square_error(test_interpolated_points)
         self.assertEqual(0.0, test_rmse)
+
+    def test_run_interpolation_with_various_betas(self):
+        test_points = Pollution.create_points_with_random_pollution(100,100,10)
+        data = Pollution.run_interpolation_with_various_betas(test_points)
+        print()
