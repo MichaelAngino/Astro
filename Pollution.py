@@ -239,11 +239,17 @@ def root_mean_square_error(points):
 
 
 def plot_numbers(rmse_values, picked_points):
+    """
+    Plots Numbers
+    """
     plt.plot(picked_points, rmse_values, "ro")
     plt.show()
 
 
 def run_interpolations_with_random_betas():
+    """
+    Runs Interpolation with random picking of of the value of Beta
+    """
     rmse_values = []
     picked_points_values = []
     number_of_times = 100
@@ -280,8 +286,8 @@ def run_interpolation_with_various_betas(points):
     return rmse_data
 
 
-#run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
-run_interpolations_with_random_betas() #Plots points on graph
+run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
+# run_interpolations_with_random_betas() #Plots points on graph
 
 # print(Point(1, 1, 1))
 #
