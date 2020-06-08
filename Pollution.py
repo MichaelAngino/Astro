@@ -73,7 +73,7 @@ class Point:
         Does a copy of the point
         :return: A new copied point
         """
-        return Point(self.label,self.get_pollution_value(),self.x, self.get_pollution_value())
+        return Point(self.label,self.get_actual_pollution_value(),self.x, self.get_pollution_value())
 
     def get_actual_pollution_value(self):
         return self.actual_pollution_value

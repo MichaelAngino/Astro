@@ -50,8 +50,25 @@ class MyTestCase(unittest.TestCase):
         for i in range(0,9):
             self.assertAlmostEqual(.5, counter[i],None,None,.02)
 
+    def test_interpolation_mutation(self):
+        """
+        Tests to make sure that the interpolation doesnt mutate existing measured points' pollution values
+        :return:
+        """
 
+        points = Pollution.create_points_with_random_pollution(100,100,10)
 
+        picked_points = Pollution.pick_uniform_random_points(points,50)
+
+        interpolated_points = Pollution.interpolate_unknown_points(picked_points,points)
+
+        for label, point in picked_points.items():
+            self.assertEqual(picked_points[label].get_pollution_value(),interpolated_points[label].get_pollution_value())
+
+        for label,point in points.items():
+            self.assertEqual(points[label].get_position(), interpolated_points[label].get_position())
+            self.assertEqual(points[label].get_actual_pollution_value(), interpolated_points[label].get_actual_pollution_value(),
+                             "test failed 1 APV:" + str(points[label].get_actual_pollution_value()) + "| 2 APV: " + str(interpolated_points[label].get_actual_pollution_value()))
 
 
 
