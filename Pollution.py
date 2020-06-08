@@ -12,9 +12,11 @@ class Point:
 
     def __init__(self, label, actual_pollution_value, x, pollution_value = float('NaN')):
         """
-        Creates a Point Object
-        :param label: Label of point ex:005, 015, 995
-        :param actual_pollution_value: Actual value of the pollution measurment
+        Initalizes new point Object
+        :param label: Label for point
+        :param actual_pollution_value: True value of pollution at the point
+        :param x: X coordinate of the point
+        :param pollution_value: (Optional) Most scenarios leave empty, if generating a new point use .read_pollution_value() to generate a pollution value
         """
         self.label = label
         # self.actual_pollution_value = actual_pollution_value
@@ -73,6 +75,8 @@ class Point:
         Does a copy of the point
         :return: A new copied point
         """
+        # temp =
+
         return Point(self.label,self.get_actual_pollution_value(),self.x, self.get_pollution_value())
 
     def get_actual_pollution_value(self):
