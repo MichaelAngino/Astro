@@ -50,6 +50,28 @@ class MyTestCase(unittest.TestCase):
         for i in range(0,9):
             self.assertAlmostEqual(.5, counter[i],None,None,.02)
 
+    def test_poisson_point_selection(self):
+        """
+        Tests uniform point selction
+        :return:
+        """
+
+        test_points = Pollution.create_points_with_random_pollution(10, 10, 1)
+        counter = defaultdict(int)
+        num_of_runs = 10000
+
+        for i in range(0, num_of_runs):
+            a = Pollution.pick_poisson_random_points(test_points, 5, 2)
+            for key in a.keys():
+                counter[key] = counter[key] + 1
+
+        for key in counter.keys():
+            counter[key] = counter[key] / num_of_runs
+
+
+        # for i in range(0, 9):
+        #     self.assertAlmostEqual(.5, counter[i], None, None, .02)
+
     def test_interpolation_mutation(self):
         """
         Tests to make sure that the interpolation doesnt mutate existing measured points' pollution values
