@@ -243,6 +243,8 @@ def plot_numbers(rmse_values, picked_points):
     Plots Numbers
     """
     plt.plot(picked_points, rmse_values, "ro")
+    plt.xlabel("Number of Known Measurements")
+    plt.ylabel("RMSE")
     plt.show()
 
 
