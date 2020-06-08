@@ -52,7 +52,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_poisson_point_selection(self):
         """
-        Tests uniform point selction
+        Tests poisson point selction
         :return:
         """
 
