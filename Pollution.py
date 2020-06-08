@@ -1,12 +1,11 @@
 import numpy as np
 import math
-import matplotlib
+import matplotlib.pyplot as plt
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
-
-# test comment
+#test comment
 
 class Point:
     """
@@ -158,7 +157,6 @@ def pick_uniform_random_points(points, pick_number):
 
     return new_map
 
-
 def pick_poisson_random_points(points, pick_number, lam):
     """
     Picks random points using poisson distribution
@@ -237,6 +235,10 @@ def root_mean_square_error(points):
     rmse = math.sqrt(sum / len(points))
     return rmse
 
+
+def plot_numbers(rmse_list, num_picked_points_list):
+    plt.plot(num_picked_points_list, rmse_list)
+    plt.show()
 
 def run_interpolation_with_various_betas(points):
     """
