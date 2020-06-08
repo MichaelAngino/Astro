@@ -70,6 +70,14 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(points[label].get_actual_pollution_value(), interpolated_points[label].get_actual_pollution_value(),
                              "test failed 1 APV:" + str(points[label].get_actual_pollution_value()) + "| 2 APV: " + str(interpolated_points[label].get_actual_pollution_value()))
 
-
-
-
+    def test_rmse_calculation(self):
+        """
+        Tests the root mean square error function for a list of interpolated points
+        :return:
+        """
+        test_points = Pollution.create_points_with_random_pollution(100, 100, 0)
+        test_picked_points = Pollution.pick_uniform_random_points(test_points, 10)
+        test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
+        self.assertEqual(100, len(test_points))
+        for i in range(0, len(test_points)):
+            self.assertEqual(100, test_points[i].get_actual_pollution_value())

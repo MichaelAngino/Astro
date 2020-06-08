@@ -188,14 +188,27 @@ def interpolate_unknown_points(known_points, all_points):
 def to_list_of_positions(points):
     """
     Converts a dictionary of points into a list of posistions [[x1,y1],[x2,y2]]
-    :param points: A dictionary of poitns {label : point}
-    :return: A list of posistions of the points [[x1,y1],[x2,y2]]
+    :param points: A dictionary of points {label : point}
+    :return: A list of positions of the points [[x1,y1],[x2,y2]]
     """
     points_position_list = []  # converts point list into a list of [x,y] values
     for point in points.values():
         points_position_list.append(point.get_position())
 
     return points_position_list
+
+
+def root_mean_square_error(points):
+    """
+    Finds the RMSE of the interpolated pollution values
+    param points: A dictionary of points {label : point}
+    :return: The RMSE of the pollution values found through interpolation
+    """
+    sum = 0
+    for point in points.values():
+        sum += pow(point.get_pollution_value() - point.get_actual_pollution_value(), 2)
+    rmse = math.sqrt(sum / len(points))
+    return rmse
 
 
 # print(Point(1, 1, 1))
