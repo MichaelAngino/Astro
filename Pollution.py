@@ -240,7 +240,10 @@ def root_mean_square_error(points):
 
 def plot_numbers(rmse_values, picked_points):
     """
-    Plots Numbers
+    Plots Numbers on a graph
+    :param rmse_values: Y- value for the graph in list form
+    :param picked_points: X- values for the graph in list form
+    :return:
     """
     plt.plot(picked_points, rmse_values, "ro")
     plt.xlabel("Number of Known Measurements")
