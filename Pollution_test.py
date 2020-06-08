@@ -1,4 +1,5 @@
 import unittest
+import numpy
 from collections import defaultdict
 import Pollution
 
@@ -120,14 +121,13 @@ class MyTestCase(unittest.TestCase):
         rmse_values = []
         picked_points_values = []
         number_of_times = 100
-        for i in range(0, 100):
+        for i in range(0, number_of_times):
             test_points = Pollution.create_points_with_random_pollution(100, 100, 0)
-            test_picked_points = Pollution.pick_uniform_random_points(test_points, 100)
+            test_picked_points = Pollution.pick_uniform_random_points(test_points, numpy.random.default_rng(1, 100))
             test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
-            self.assertEqual(100, len(test_points))
             test_rmse = Pollution.root_mean_square_error(test_interpolated_points)
             rmse_values.append(test_rmse)
             picked_points_values.append(len(test_picked_points))
 
-        Pollution.plot_numbers(rmse_values, picked_points_values) #Plots points on graph
+
 

@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
-#test comment
+
+# test comment
 
 class Point:
     """
@@ -157,6 +158,7 @@ def pick_uniform_random_points(points, pick_number):
 
     return new_map
 
+
 def pick_poisson_random_points(points, pick_number, lam):
     """
     Picks random points using poisson distribution
@@ -236,9 +238,26 @@ def root_mean_square_error(points):
     return rmse
 
 
-def plot_numbers(rmse_list, num_picked_points_list):
-    plt.plot(num_picked_points_list, rmse_list)
+def plot_numbers(rmse_values, picked_points):
+    plt.plot(picked_points, rmse_values, "ro")
     plt.show()
+
+
+def run_interpolations_with_random_betas():
+    rmse_values = []
+    picked_points_values = []
+    number_of_times = 100
+    random = np.random.default_rng()
+
+    for i in range(0, number_of_times):
+        test_points = create_points_with_random_pollution(100, 100, 0)
+        test_picked_points = pick_uniform_random_points(test_points, random.integers(1, 100))
+        test_interpolated_points = interpolate_unknown_points(test_picked_points, test_points)
+        test_rmse = root_mean_square_error(test_interpolated_points)
+        rmse_values.append(test_rmse)
+        picked_points_values.append(len(test_picked_points))
+    plot_numbers(rmse_values, picked_points_values)
+
 
 def run_interpolation_with_various_betas(points):
     """
@@ -250,21 +269,19 @@ def run_interpolation_with_various_betas(points):
     for i in range(1, len(
             points) + 1):  # runs through all number of picked points starting at 1 and ending with all points picked
         sum_rmse = 0
-        for j in range(0, 5): # runs every interpolation with a certain beta 5 times and averages the results
+        for j in range(0, 5):  # runs every interpolation with a certain beta 5 times and averages the results
             picked_points = pick_uniform_random_points(points, i)
             interpolated_points = interpolate_unknown_points(picked_points, points)
             sum_rmse = sum_rmse + root_mean_square_error(interpolated_points)
         rmse_data.append(sum_rmse / 5)
 
-
-    plot_numbers(rmse_data, range(1,len(points)+1))
-
-
-
+    plot_numbers(rmse_data, range(1, len(points) + 1))
 
     return rmse_data
 
-run_interpolation_with_various_betas(create_points_with_random_pollution(100,100,10))
+
+#run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
+run_interpolations_with_random_betas() #Plots points on graph
 
 # print(Point(1, 1, 1))
 #
