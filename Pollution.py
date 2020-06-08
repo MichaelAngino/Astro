@@ -29,7 +29,7 @@ class Point:
 
 
     def __str__(self):
-        return "[Point: " + str(self.label) + "| APV: " + str(self.pollution_value)+"| Position: {" + str(self.x)+ "," + str(self.y)+ "} ]"
+        return "[Point: " + str(self.label) + "| APV: " + str(self.actual_pollution_value)+ "| PV: "+ str(self.pollution_value) +"| Position: {" + str(self.x)+ "," + str(self.y)+ "} ]"
 
     def get_pollution_value(self):
         """
@@ -191,6 +191,8 @@ def to_list_of_posistions(points):
 
 
 
+
+print( Point(1,1,1))
 #
 #
 # random_points1 = create_points_with_random_pollution(10, 100, 10)
