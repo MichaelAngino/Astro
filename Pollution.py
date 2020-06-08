@@ -32,9 +32,18 @@ class Point:
         return "[Point: " + str(self.label) + "| APV: " + str(self.pollution_value)+"| Position: {" + str(self.x)+ "," + str(self.y)+ "} ]"
 
     def get_pollution_value(self):
+        """
+        Gets measured pollution value, also stores the value of the interpolated pollution value
+        :return: Pollution_value (float)
+        """
         return self.pollution_value
 
     def set_pollution_value(self, new_pollution_value):
+        """
+        Sets measured pollution value or to store the interpolated pollution value
+        :param new_pollution_value: New pollution value to be set
+        :return: Nothing
+        """
         self.pollution_value = new_pollution_value
 
     def get_label(self):
@@ -60,19 +69,28 @@ class Point:
         self.pollution_value = self.actual_pollution_value
 
     def copy(self):
+        """
+        Does a copy of the point
+        :return: A new copied point
+        """
         return Point(self.label,self.get_pollution_value(),self.x, self.get_pollution_value())
 
     def get_actual_pollution_value(self):
         return self.actual_pollution_value
 
 def copy_dictionary_with_points(points):
+    """
+    Does a deep copy of a dictionary with values being points
+    :param points: A dictionary with keys being labels and values being points {label:point}
+    :return: A new copied dictionary
+    """
     new_dict = {}
     for key, value in points.items():
         new_dict[key] = value.copy()
 
     return new_dict
 
-def create_map_of_random_pollution_points(length, mean, std):
+def create_points_with_random_pollution(length, mean, std):
     """
     Creates a map of points with random Pollution Values using a gaussian distribution in 1D evenly starting at x = 05 every 10
     :param length: Wanted length of list
@@ -120,28 +138,34 @@ def pick_uniform_random_points(points, pick_number ):
     :return: A new map with the picked points {label: point}
     """
     random = np.random.default_rng()
-    random_picks = random.integers(0,len(points),pick_number)
+    random_picks = random.integers(0,len(points),pick_number) # picks uniform random numbers
 
     new_map  = {}
-    for i in random_picks:
+    for i in random_picks: #assigns and copies picked points into a new dictionary
         new_map[i] = Point(i,points.get(i).get_actual_pollution_value(),points.get(i).get_x_cord())
         new_map.get(i).read_pollution_value()
 
     return new_map
 
 def interpolate_unknown_points(known_points, all_points):
+    """
+    Interpolate pollution values for points that are have not been measured
+    :param known_points: A Dictionary of all points that have been measured {label:point}
+    :param all_points: A Dictionary of all points that exist {Label: point}
+    :return: A new map with interpolated pollution values {Label : point}
+    """
     unkown_posistions = []
     unkown_labels = []
-    for i in range(0,len(all_points)):
+    for i in range(0,len(all_points)): #Creates a list of posistions of points that have not been measured and a list of their respective labels
         if not (i in known_points):
             unkown_posistions.append(all_points.get(i).get_position())
             unkown_labels.append(i)
 
-    interpolated_pollution_values = interpolate_points_using_posistions(known_points, unkown_posistions)
+    interpolated_pollution_values = interpolate_points_using_posistions(known_points, unkown_posistions) #interpolates the pollution values for the posistions where we have not measured pollution values
 
-    interpolated_map = copy_dictionary_with_points(known_points)
+    interpolated_map = copy_dictionary_with_points(known_points) #creates a copy of the known_points dictionary
 
-    for i in range(0,len(unkown_labels)):
+    for i in range(0,len(unkown_labels)): # adds missing points and their interpolated pollution values into the new dictionary
         interpolated_map[unkown_labels[i]] = all_points.get(unkown_labels[i]).copy()
         interpolated_map[unkown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
 
@@ -149,6 +173,11 @@ def interpolate_unknown_points(known_points, all_points):
 
 
 def to_list_of_posistions(points):
+    """
+    Converts a dictionary of points into a list of posistions [[x1,y1],[x2,y2]]
+    :param points: A dictionary of poitns {label : point}
+    :return: A list of posistions of the points [[x1,y1],[x2,y2]]
+    """
     points_position_list = []  # converts point list into a list of [x,y] values
     for point in points.values():
         points_position_list.append(point.get_position())
@@ -159,24 +188,14 @@ def to_list_of_posistions(points):
 
 
 
-random_points1 = create_map_of_random_pollution_points(10,100,10)
+random_points1 = create_points_with_random_pollution(10, 100, 10)
 p = pick_uniform_random_points(random_points1,5)
 
 a = interpolate_unknown_points(p,random_points1)
 
 
 
-random_points = create_map_of_random_pollution_points(10,100,10).values()
 
-
-test = []
-for i in random_points:
-    test.append(i.get_pollution_value())
-
-testNP = np.array(test)
-prediction = interpolate_points_using_posistions(random_points, [[100, 0], [3, 0]])
-prediction_list = prediction.tolist()
-print(prediction_list)
 
 
 

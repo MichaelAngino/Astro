@@ -1,5 +1,5 @@
 import unittest
-
+from collections import defaultdict
 import Pollution
 
 
@@ -29,7 +29,28 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(20, test_point.get_pollution_value())
 
-    d
+    def test_uniform_point_selection(self):
+        """
+        Tests uniform point selction
+        :return:
+        """
+
+        test_points = Pollution.create_points_with_random_pollution(10,10,1)
+        counter = defaultdict(int)
+        num_of_runs = 1000
+
+        for i in range(0,num_of_runs):
+            a = Pollution.pick_uniform_random_points(test_points, 10)
+            for key in a.keys():
+                counter[key] = counter[key]+1
+
+        for key in counter.keys():
+            counter[key] = counter[key]/ num_of_runs
+
+        for i in range(0,9):
+            self.assertAlmostEqual(.1, counter[i],3)
+
+
 
 
 
