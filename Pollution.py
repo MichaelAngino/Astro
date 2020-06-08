@@ -250,7 +250,7 @@ def run_interpolations_with_random_betas():
     random = np.random.default_rng()
 
     for i in range(0, number_of_times):
-        test_points = create_points_with_random_pollution(100, 100, 0)
+        test_points = create_points_with_random_pollution(100, 100, 10)
         test_picked_points = pick_uniform_random_points(test_points, random.integers(1, 100))
         test_interpolated_points = interpolate_unknown_points(test_picked_points, test_points)
         test_rmse = root_mean_square_error(test_interpolated_points)
