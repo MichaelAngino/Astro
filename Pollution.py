@@ -245,7 +245,7 @@ def run_interpolation_with_various_betas(points):
     Runs Interpolation with number of picked points(beta) from 1 - all points picked and using uniform distribution in the picking
     """
 
-    data = []
+    rmse_data = []
 
     for i in range(1, len(
             points) + 1):  # runs through all number of picked points starting at 1 and ending with all points picked
@@ -254,12 +254,17 @@ def run_interpolation_with_various_betas(points):
             picked_points = pick_uniform_random_points(points, i)
             interpolated_points = interpolate_unknown_points(picked_points, points)
             sum_rmse = sum_rmse + root_mean_square_error(interpolated_points)
-        data.append(sum_rmse / 5)
+        rmse_data.append(sum_rmse / 5)
+
+
+    plot_numbers(rmse_data, range(1,len(points)+1))
 
 
 
 
-    return data
+    return rmse_data
+
+run_interpolation_with_various_betas(create_points_with_random_pollution(100,100,10))
 
 # print(Point(1, 1, 1))
 #
