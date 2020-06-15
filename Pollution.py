@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import DotProduct as DP
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from LinearKernel import LinearKernel
 
@@ -121,7 +122,9 @@ def interpolate_points_using_positions(known_points, wanted_point_positions):
     :return: a list of all predicted pollution values
     """
 
-    gp = GaussianProcessRegressor(C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2)))  # Instantiate a Gaussian Process model
+    kernal = DP(1)
+    # kernal = RBF(10, (1e-2,1e2)) *C(1)
+    gp = GaussianProcessRegressor(kernal,alpha = 10, n_restarts_optimizer= 9)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -291,9 +294,32 @@ def run_interpolation_with_various_betas(points):
 
     return rmse_data
 
+def  see_what_its_doing():
+    all_points = create_points_with_random_pollution(100,100,10)
+    picked_points = pick_uniform_random_points(all_points, 20)
+    interpolated_points = interpolate_unknown_points(picked_points,all_points)
+
+    picked_x = []
+    picked_pollution = []
+    for label, point in picked_points.items():
+        picked_x.append(label)
+        picked_pollution.append(point.get_pollution_value())
+
+    interp_x = []
+    inter_pollution = []
+
+    for label, point in interpolated_points.items():
+        if not label in picked_x:
+            interp_x.append(label)
+            inter_pollution.append(point.get_pollution_value())
+
+    plt.plot(picked_x,picked_pollution,"ro",interp_x,inter_pollution,"go")
+    plt.show()
 
 run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
 # run_interpolations_with_random_betas() #Plots points on graph
+
+# see_what_its_doing()
 
 # print(Point(1, 1, 1))
 #
