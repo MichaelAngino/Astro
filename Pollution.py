@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-
+from LinearKernel import LinearKernel
 
 # test comment
 
@@ -253,20 +253,21 @@ def plot_numbers(rmse_values, picked_points):
 
 def run_interpolations_with_random_betas():
     """
-    Runs Interpolation with random picking of of the value of Beta
+    Runs Interpolation with random picking of the value of Beta
     """
     rmse_values = []
     picked_points_values = []
-    number_of_times = 100
+    number_of_times = 100  # this will be the number of points displayed on the graph
     random = np.random.default_rng()
 
     for i in range(0, number_of_times):
         test_points = create_points_with_random_pollution(100, 100, 10)
-        test_picked_points = pick_uniform_random_points(test_points, random.integers(1, 100))
+        test_picked_points = pick_uniform_random_points(test_points, random.integers(1, 100)) # picks a random number of known points
         test_interpolated_points = interpolate_unknown_points(test_picked_points, test_points)
         test_rmse = root_mean_square_error(test_interpolated_points)
         rmse_values.append(test_rmse)
         picked_points_values.append(len(test_picked_points))
+
     plot_numbers(rmse_values, picked_points_values)
 
 
