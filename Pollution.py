@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct as DP
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-from LinearKernel import LinearKernel
+
 
 # test comment
 
@@ -122,8 +122,8 @@ def interpolate_points_using_positions(known_points, wanted_point_positions):
     :return: a list of all predicted pollution values
     """
 
-    kernal = DP(1)
-    # kernal = RBF(10, (1e-2,1e2)) *C(1)
+    # kernal = DP(1)
+    kernal = RBF(1, (1e-2,1e2))
     gp = GaussianProcessRegressor(kernal,alpha = 10, n_restarts_optimizer= 9)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
