@@ -122,9 +122,9 @@ def interpolate_points_using_positions(known_points, wanted_point_positions):
     :return: a list of all predicted pollution values
     """
 
-    # kernal = DP(1)
-    kernal = RBF(1, (1e-2,1e2))
-    gp = GaussianProcessRegressor(kernal,alpha = 10, n_restarts_optimizer= 9)  # Instantiate a Gaussian Process model
+    kernel = DP(1)
+    # kernel = RBF(10, (1e-2, 1e2))
+    gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=9)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -176,7 +176,7 @@ def pick_poisson_random_points(points, pick_number, lam):
 
     while len(random_picks) < pick_number:
         random_num = random.poisson(lam)  # picks poisson random number
-        if not random_num in random_picks and random_num > 0 and random_num < len(
+        if not random_num in random_picks and 0 < random_num < len(
                 points):  # Checks to make sure number hasnt been picked yet and is within range
             random_picks.append(random_num)
     new_map = {}
@@ -265,7 +265,8 @@ def run_interpolations_with_random_betas():
 
     for i in range(0, number_of_times):
         test_points = create_points_with_random_pollution(100, 100, 10)
-        test_picked_points = pick_uniform_random_points(test_points, random.integers(1, 100)) # picks a random number of known points
+        test_picked_points = pick_uniform_random_points(test_points, random.integers(1,
+                                                                                     100))  # picks a random number of known points
         test_interpolated_points = interpolate_unknown_points(test_picked_points, test_points)
         test_rmse = root_mean_square_error(test_interpolated_points)
         rmse_values.append(test_rmse)
@@ -294,10 +295,11 @@ def run_interpolation_with_various_betas(points):
 
     return rmse_data
 
-def  see_what_its_doing():
-    all_points = create_points_with_random_pollution(100,100,10)
+
+def see_what_its_doing():
+    all_points = create_points_with_random_pollution(100, 100, 10)
     picked_points = pick_uniform_random_points(all_points, 20)
-    interpolated_points = interpolate_unknown_points(picked_points,all_points)
+    interpolated_points = interpolate_unknown_points(picked_points, all_points)
 
     picked_x = []
     picked_pollution = []
@@ -313,9 +315,13 @@ def  see_what_its_doing():
             interp_x.append(label)
             inter_pollution.append(point.get_pollution_value())
 
-    plt.plot(picked_x,picked_pollution,"ro",interp_x,inter_pollution,"go")
+    plt.plot(picked_x, picked_pollution, "ro", interp_x, inter_pollution, "go")
+    plt.xlabel("Point Label")
+    plt.ylabel("Pollution Value")
     plt.show()
 
+
+see_what_its_doing()
 run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
 # run_interpolations_with_random_betas() #Plots points on graph
 
