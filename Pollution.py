@@ -122,8 +122,8 @@ def interpolate_points_using_positions(known_points, wanted_point_positions):
     :return: a list of all predicted pollution values
     """
 
-    kernel = DP(1)
-    # kernel = RBF(10, (1e-2, 1e2))
+    # kernel = DP(1)
+    kernel = RBF(10, (1e-2, 1e2)) * C(1)
     gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=9)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
@@ -322,7 +322,7 @@ def see_what_its_doing():
 
 
 see_what_its_doing()
-run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
+# run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
 # run_interpolations_with_random_betas() #Plots points on graph
 
 # see_what_its_doing()
