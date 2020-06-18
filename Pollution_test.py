@@ -103,11 +103,16 @@ class MyTestCase(unittest.TestCase):
         """
         test_points = Pollution.create_points_with_random_pollution_1d(100, 100, 0)
         test_picked_points = Pollution.pick_uniform_random_points(test_points, 100)
-        test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
-        self.assertEqual(100, len(test_points))
-
-        test_rmse = Pollution.root_mean_square_error(test_interpolated_points)
+        # test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
+        # self.assertEqual(100, len(test_points))
+        #
+        test_rmse = Pollution.root_mean_square_error(test_picked_points)
         self.assertEqual(0.0, test_rmse)
+
+        test_points_2d = Pollution.create_points_with_random_pollution_2d(10, 100, 0)
+        test_picked_points_2d = Pollution.pick_uniform_random_points(test_points_2d, 100)
+        test_rmse_2d = Pollution.root_mean_square_error(test_picked_points_2d)
+        self.assertEqual(0.0, test_rmse_2d)
 
     def test_run_interpolation_with_various_betas(self):
         test_points = Pollution.create_points_with_random_pollution_1d(100, 100, 10)

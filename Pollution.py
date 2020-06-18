@@ -362,8 +362,8 @@ def see_what_its_doing_1d():
 
 random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
 
-run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
-run_interpolation_with_various_betas(random_total_points_2d, DP(1))
+# run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
+# run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
 
 # see_what_its_doing()
