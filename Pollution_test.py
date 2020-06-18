@@ -10,7 +10,7 @@ class MyTestCase(unittest.TestCase):
         Testing Create_list_of_points method
         :return:
         """
-        test_list = Pollution.create_points_with_random_pollution(100, 100, 0)
+        test_list = Pollution.create_points_with_random_pollution_1d(100, 100, 0)
         self.assertEqual(100, len(test_list))
         for i in range(0, len(test_list)):
             self.assertEqual(100, test_list[i].get_actual_pollution_value())
@@ -36,7 +36,7 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        test_points = Pollution.create_points_with_random_pollution(10, 10, 1)
+        test_points = Pollution.create_points_with_random_pollution_1d(10, 10, 1)
         counter = defaultdict(int)
         num_of_runs = 10000
 
@@ -57,7 +57,7 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        test_points = Pollution.create_points_with_random_pollution(10, 10, 1)
+        test_points = Pollution.create_points_with_random_pollution_1d(10, 10, 1)
         counter = defaultdict(int)
         num_of_runs = 10000
 
@@ -79,7 +79,7 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        points = Pollution.create_points_with_random_pollution(100, 100, 10)
+        points = Pollution.create_points_with_random_pollution_1d(100, 100, 10)
 
         picked_points = Pollution.pick_uniform_random_points(points, 50)
 
@@ -101,7 +101,7 @@ class MyTestCase(unittest.TestCase):
         Tests the root mean square error function for a list of interpolated points
         :return:
         """
-        test_points = Pollution.create_points_with_random_pollution(100, 100, 0)
+        test_points = Pollution.create_points_with_random_pollution_1d(100, 100, 0)
         test_picked_points = Pollution.pick_uniform_random_points(test_points, 100)
         test_interpolated_points = Pollution.interpolate_unknown_points(test_picked_points, test_points)
         self.assertEqual(100, len(test_points))
@@ -110,7 +110,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0.0, test_rmse)
 
     def test_run_interpolation_with_various_betas(self):
-        test_points = Pollution.create_points_with_random_pollution(100,100,10)
+        test_points = Pollution.create_points_with_random_pollution_1d(100, 100, 10)
         data = Pollution.run_interpolation_with_various_betas(test_points)
         print()
 

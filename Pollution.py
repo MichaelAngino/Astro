@@ -14,7 +14,7 @@ class Point:
     Object representing a point in Space
     """
 
-    def __init__(self, label, actual_pollution_value, x):
+    def __init__(self, label, actual_pollution_value, x, y=0):
         """
         Initalizes new point Object
         :param label: Label for point
@@ -29,7 +29,7 @@ class Point:
 
         self.x = x
 
-        self.y = 0
+        self.y = y
 
     def __str__(self):
         return "[Point: " + str(self.label) + "| APV: " + str(self.actual_pollution_value) + "| PV: " + str(
@@ -55,6 +55,9 @@ class Point:
 
     def get_x_cord(self):
         return self.x
+
+    def get_y_cord(self):
+        return self.y
 
     def get_position(self):
         """
@@ -98,7 +101,7 @@ def copy_dictionary_with_points(points):
     return new_dict
 
 
-def create_points_with_random_pollution(length, mean, std):
+def create_points_with_random_pollution_1d(length, mean, std):
     """
     Creates a map of points with random Pollution Values using a gaussian distribution in 1D evenly starting at x = 05 every 10
     :param length: Wanted length of list
@@ -111,6 +114,25 @@ def create_points_with_random_pollution(length, mean, std):
     for i in range(0, length):
         new_map[i] = (Point(i, np.random.normal(mean, std), x))
         x = x + 10
+    return new_map
+
+
+def create_points_with_random_pollution_2d(side_length, mean, std):
+    """
+    Creates a map of points with random Pollution Values using a gaussian distribution in 2D evenly starting at x = 05 every 10
+    :param side_length: Number of points on each side of the square
+    :param mean: Mean of gaussian distribution of pollution values
+    :param std: Standard Deviation of gaussian distribution of pollution values
+    :return: map of points with key being their label and the value being a point object
+    """
+    new_map = {}
+    x = 5
+    y = 5
+    for i in range(0, side_length):
+        for j in range(0, side_length):
+            new_map[i] = (Point(i, np.random.normal(mean, std), x,y))
+            y = y + 10
+    x = x + 10
     return new_map
 
 
@@ -134,9 +156,13 @@ def interpolate_points_using_positions(known_points, wanted_point_positions):
 
     gp.fit(known_points_position_list, pollution_value_list)  # Fits model to data
 
-    prediction_list = known_points_position_list
-    prediction_list.extend(wanted_point_positions)
-    return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
+    #
+    # prediction_list = known_points_position_list
+    # prediction_list.extend(wanted_point_positions)
+    # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
+
+
+    return gp.predict(wanted_point_positions)
 
 
 def pick_uniform_random_points(points, pick_number):
@@ -254,7 +280,7 @@ def plot_numbers(rmse_values, picked_points):
     plt.show()
 
 
-def run_interpolations_with_random_betas():
+def run_interpolations_with_random_betas_1d():
     """
     Runs Interpolation with random picking of the value of Beta
     """
@@ -264,7 +290,7 @@ def run_interpolations_with_random_betas():
     random = np.random.default_rng()
 
     for i in range(0, number_of_times):
-        test_points = create_points_with_random_pollution(100, 100, 10)
+        test_points = create_points_with_random_pollution_1d(100, 100, 10)
         test_picked_points = pick_uniform_random_points(test_points, random.integers(1,
                                                                                      100))  # picks a random number of known points
         test_interpolated_points = interpolate_unknown_points(test_picked_points, test_points)
@@ -277,13 +303,14 @@ def run_interpolations_with_random_betas():
 
 def run_interpolation_with_various_betas(points):
     """
-    Runs Interpolation with number of picked points(beta) from 1 - all points picked and using uniform distribution in the picking
+    Runs Interpolation with number of picked points(beta) from 1 to all points-1 picked and using uniform distribution in
+    the picking in 1 Dimesnsion
     """
 
     rmse_data = []
 
     for i in range(1, len(
-            points) + 1):  # runs through all number of picked points starting at 1 and ending with all points picked
+            points)):  # runs through all number of picked points starting at 1 and ending with all points picked-1
         sum_rmse = 0
         for j in range(0, 5):  # runs every interpolation with a certain beta 5 times and averages the results
             picked_points = pick_uniform_random_points(points, i)
@@ -291,13 +318,19 @@ def run_interpolation_with_various_betas(points):
             sum_rmse = sum_rmse + root_mean_square_error(interpolated_points)
         rmse_data.append(sum_rmse / 5)
 
-    plot_numbers(rmse_data, range(1, len(points) + 1))
+    plot_numbers(rmse_data, range(1, len(points)))
 
     return rmse_data
 
 
-def see_what_its_doing():
-    all_points = create_points_with_random_pollution(100, 100, 10)
+
+
+def see_what_its_doing_1d():
+    """
+    Graphs all points and interpolates unknown points, useful for visualizing Gaussian Interpolation and affects of kernals
+    :return:
+    """
+    all_points = create_points_with_random_pollution_1d(100, 100, 10)
     picked_points = pick_uniform_random_points(all_points, 20)
     interpolated_points = interpolate_unknown_points(picked_points, all_points)
 
@@ -321,8 +354,9 @@ def see_what_its_doing():
     plt.show()
 
 
-see_what_its_doing()
-# run_interpolation_with_various_betas(create_points_with_random_pollution(100, 100, 10))
+# see_what_its_doing_1d()
+# run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
+run_interpolation_with_various_betas(create_points_with_random_pollution_2d(100,100,10))
 # run_interpolations_with_random_betas() #Plots points on graph
 
 # see_what_its_doing()
