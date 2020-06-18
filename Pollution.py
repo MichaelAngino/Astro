@@ -127,9 +127,10 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
     """
     new_map = {}
     x = 5
-    y = 5
+
     label_index = 0
     for i in range(0, side_length):
+        y = 5
         for j in range(0, side_length):
             new_map[label_index] = (Point(label_index, np.random.normal(mean, std), x,y))
             label_index = label_index+1
@@ -148,7 +149,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
 
     # kernel = DP(1)
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
-    gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=9)  # Instantiate a Gaussian Process model
+    gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -314,7 +315,7 @@ def run_interpolation_with_various_betas(points, kernel =RBF(10, (1e-2, 1e2)) * 
     for i in range(1, len(
             points)):  # runs through all number of picked points starting at 1 and ending with all points picked-1
         sum_rmse = 0
-        for j in range(0, 5):  # runs every interpolation with a certain beta 5 times and averages the results
+        for j in range(0, 3):  # runs every interpolation with a certain beta 5 times and averages the results
             picked_points = pick_uniform_random_points(points, i)
             interpolated_points = interpolate_unknown_points(picked_points, points, kernel)
             sum_rmse = sum_rmse + root_mean_square_error(interpolated_points)
@@ -359,7 +360,7 @@ def see_what_its_doing_1d():
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
 
-random_total_points_2d = create_points_with_random_pollution_2d(11, 100, 10)
+random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
 
 run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
 run_interpolation_with_various_betas(random_total_points_2d, DP(1))
