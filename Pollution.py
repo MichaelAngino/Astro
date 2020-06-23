@@ -210,11 +210,14 @@ def create_covariance_matrix(points,  length_scale):
     return covariance
 
 
-def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
+def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1),
+                                       fixed=False):
     """
-    Predicts points based on known data using Kriging (Gaussian Processes)
+     Predicts points based on known data using Kriging (Gaussian Processes)
     :param known_points: list of points
     :param wanted_point_positions: list of wanted point posistions [[x1,y1], [x2,y2]]
+    :param kernel:  Kernal to use in interpolation
+    :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
     :return: a list of all predicted pollution values
     """
 
@@ -244,6 +247,8 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
     :param all_points: A Dictionary of all points that exist {Label: point}
+    :param kernel:  Kernal to use in interpolation
+    :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
     :return: A new map with interpolated pollution values {Label : point}
     """
     unknown_positions = []
