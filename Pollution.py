@@ -224,7 +224,12 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
 
     # kernel = DP(1)
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
-    gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
+
+
+    if fixed:
+        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4, optimizer= None)  # Instantiate a fixed Gaussian Process model
+    else:
+        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -240,7 +245,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
 
-    return gp.predict(wanted_point_positions)
+    return (gp.predict(wanted_point_positions), gp.get_params())
 
 
 def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
@@ -260,9 +265,10 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
             unknown_positions.append(all_points.get(i).get_position())
             unknown_labels.append(i)
 
-    interpolated_pollution_values = interpolate_points_using_positions(known_points,
+    interpolated_pollution_values, length_scale = interpolate_points_using_positions(known_points,
                                                                        unknown_positions,
                                                                        kernel, fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
+
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -271,7 +277,7 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
         interpolated_map[unknown_labels[i]] = all_points.get(unknown_labels[i]).copy()
         interpolated_map[unknown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
 
-    return interpolated_map
+    return (interpolated_map, length_scale)
 
 def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
     """
@@ -280,7 +286,7 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
     :param all_points:  A  map of maps of all points that exist
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
-    :return: A new map of maps of interpolated values
+    :return: A tuple of (A new map of maps of interpolated values, length of kernel)
     """
 
     interpolated_maps = {}
