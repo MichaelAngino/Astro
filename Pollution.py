@@ -82,7 +82,7 @@ class Point:
         Does a copy of the point
         :return: A new copied point
         """
-        temp = Point(self.label, self.get_actual_pollution_value(), self.x)
+        temp = Point(self.label, self.get_actual_pollution_value(), self.x, self.y)
         temp.set_pollution_value(self.get_pollution_value())
         return temp
 
@@ -146,45 +146,40 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
 
 
 def create_points_with_spatially_correlated_pollution_2d(side_length, mean, length_scale, num_maps):
-    '''
+    """
     Creates a map of pollution values determined by their spatial correlation
     :param side_length: Number of points on each side of the matrix
     :param mean: Mean of the gaussian distribution of pollution values
     :param length_scale: The length scale of the RBF kernel
     :param num_maps: Number of pollution maps used in data
-    '''
+    """
     # with vars names: np.random.multivariate_normal(mean_vector_of_each_point=[0, 0], COV=[[1,1], [1,1]] , nb_maps=1)[id_map=0]
     mean_vector = []
     for i in range(side_length * side_length):
         mean_vector.append(mean)
+    pollution_maps = {}
 
-    initial_point_map = {}
+    point_map = {}
     x = 5
     label_index = 0
     for i in range(0, side_length):
         y = 5
         for j in range(0, side_length):
-            initial_point_map[label_index] = Point(label_index, 'NaN', x, y)
+            point_map[label_index] = Point(label_index, 'NaN', x, y)
             label_index += 1
             y += 10
         x += 10
+    for i in range(0, num_maps):
+        pollution_maps[i] = copy_dictionary_with_points(point_map)
 
-    new_map = {}
-    covariance_matrix = create_covariance_matrix(initial_point_map, length_scale)
-    '''DEBUGGING
-    print(len(initial_point_map))
-    for i in range(len(covariance_matrix)):
-        for j in range(len(covariance_matrix[0])):
-            print(covariance_matrix[i][j], end=' ')
-        print()
-    # print(str(len(mean_vector)) + " "+ str(len(covariance_matrix)))
-    current = (np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps))
-    for i in range(len(current)):
-        print(current[i])
-    print("END OF DEBUG")
-    '''
-    new_map = np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps)
-    return new_map
+    covariance_matrix = create_covariance_matrix(point_map, length_scale)
+    maps_of_pollution_values = np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps)
+
+    for i in range(num_maps):
+        for j in range(side_length * side_length):
+            pollution_maps[i][j].actual_pollution_value = maps_of_pollution_values[i][j]
+
+    return pollution_maps
 
 
 def create_covariance_matrix(points, length_scale):
@@ -433,6 +428,8 @@ def see_what_its_doing_1d():
 # p = pick_uniform_random_points(random_points1,5)
 #
 # a = interpolate_unknown_points(p,random_points1)
-test_points = create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 1)
-for i in range(len(test_points)):
-    print(test_points[i], end=' ')
+# test_pollution_maps = create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 2)
+# for i in range(len(test_pollution_maps)):
+#    for j in range(len(test_pollution_maps[0])):
+#       print(test_pollution_maps[i][j], end=' ')
+#    print()

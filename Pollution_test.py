@@ -135,6 +135,3 @@ class MyTestCase(unittest.TestCase):
         covariance = Pollution.create_covariance_matrix(points, .00001)
         self.assertEqual(1.0, covariance[0][0])
         self.assertEqual(1.0, covariance[1][1])
-
-        test_points = Pollution.create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 1)
-        # don't know how to check whether this method works
