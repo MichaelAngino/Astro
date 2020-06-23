@@ -184,8 +184,9 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, leng
     for i in range(0, side_length):
         new_y = 5
         for j in range(0, side_length):
-            new_map[new_label_index] = Point(new_label_index, np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps), x, y)
+            new_map[new_label_index] = Point(new_label_index, np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps), new_x, new_y)
             new_y += 10
+            new_label_index += 1
         new_x += 10
 
     return new_map
