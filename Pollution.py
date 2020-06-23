@@ -145,6 +145,12 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
     return new_map
 
 def create_covariance_matrix(points,  length_scale):
+    """
+    Creates Covariance Matrix
+    :param points: Map of all points
+    :param length_scale: Length Scale
+    :return: A matrix
+    """
 
     covariance = []
     for i in range(0,len(points)):
@@ -183,7 +189,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     return gp.predict(wanted_point_positions)
 
 
-def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
+def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -200,7 +206,7 @@ def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1
 
     interpolated_pollution_values = interpolate_points_using_positions(known_points,
                                                                        unknown_positions,
-                                                                       kernel)  # interpolates the pollution values for the posistions where we have not measured pollution values
+                                                                       kernel, fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -210,6 +216,26 @@ def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1
         interpolated_map[unknown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
 
     return interpolated_map
+
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
+    """
+
+    :param known_points: A map of maps of all points that have been measured
+    :param all_points:  A  map of maps of all points that exist
+    :param kernel:  Kernal to use in interpolation
+    :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
+    :return: A new map of maps of interpolated values
+    """
+
+    interpolated_maps = {}
+    for label in all_points.keys():
+        interpolated_maps[label] = interpolate_unknown_points(known_points, all_points, kernel, fixed)
+
+    return interpolated_maps
+
+
+
+
 
 def pick_uniform_random_points(points, pick_number):
     """
