@@ -178,17 +178,12 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, leng
             print(covariance_matrix[i][j], end=' ')
         print()
     # print(str(len(mean_vector)) + " "+ str(len(covariance_matrix)))
+    current = (np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps))
+    for i in range(len(current)):
+        print(current[i])
+    print("END OF DEBUG")
     '''
-    new_x = 5
-    new_label_index = 0
-    for i in range(0, side_length):
-        new_y = 5
-        for j in range(0, side_length):
-            new_map[new_label_index] = Point(new_label_index, np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps), new_x, new_y)
-            new_y += 10
-            new_label_index += 1
-        new_x += 10
-
+    new_map = np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps)
     return new_map
 
 
@@ -418,6 +413,7 @@ def see_what_its_doing_1d():
     plt.ylabel("Pollution Value")
     plt.show()
 
+
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
 
@@ -437,3 +433,6 @@ def see_what_its_doing_1d():
 # p = pick_uniform_random_points(random_points1,5)
 #
 # a = interpolate_unknown_points(p,random_points1)
+test_points = create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 1)
+for i in range(len(test_points)):
+    print(test_points[i], end=' ')
