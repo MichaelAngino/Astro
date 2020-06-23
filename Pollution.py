@@ -144,12 +144,12 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
         x = x + 10
     return new_map
 
-def create_covariance_matrix(num_points_on_side, points,  length_scale):
+def create_covariance_matrix(points,  length_scale):
 
     covariance = []
-    for i in range(0,len(num_points_on_side)):
+    for i in range(0,len(points)):
         covariance.append([])
-        for j in range(0,len(num_points_on_side)):
+        for j in range(0,len(points)):
             covariance[i].append(np.exp(-np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
 
     return covariance

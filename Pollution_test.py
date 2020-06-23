@@ -120,7 +120,20 @@ class MyTestCase(unittest.TestCase):
         print()
 
     def test_covariance_matrix(self):
-        first_point = Pollution.Point(1, 100, 5, 10)
-        second_point = Pollution.Point(2, 100, 5, 14)
+        first_point = Pollution.Point(0, 100, 5, 10)
+        second_point = Pollution.Point(1, 100, 5, 14)
         distance_between_points = Pollution.distance(first_point, second_point)
         self.assertEqual(4.0, distance_between_points)
+
+
+        points = {0: first_point, 1: second_point}
+        covariance = Pollution.create_covariance_matrix(points, 1)
+        self.assertEqual(1.0, covariance[0][0])
+        self.assertEqual(1.0, covariance[1][1])
+
+        covariance = Pollution.create_covariance_matrix(points, 10000)
+        self.assertEqual(1.0, covariance[0][0])
+        self.assertEqual(1.0, covariance[1][1])
+        covariance = Pollution.create_covariance_matrix(points, .00001)
+        self.assertEqual(1.0, covariance[0][0])
+        self.assertEqual(1.0, covariance[1][1])
