@@ -135,7 +135,7 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
             new_map[label_index] = (Point(label_index, np.random.normal(mean, std), x,y))
             label_index = label_index+1
             y = y + 10
-    x = x + 10
+        x = x + 10
     return new_map
 
 
@@ -363,6 +363,7 @@ def see_what_its_doing_1d():
 random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
 
 # run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
+print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
 
