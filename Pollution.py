@@ -82,7 +82,7 @@ class Point:
         Does a copy of the point
         :return: A new copied point
         """
-        temp = Point(self.label, self.get_actual_pollution_value(), self.x)
+        temp = Point(self.label, self.get_actual_pollution_value(), self.x, self.y)
         temp.set_pollution_value(self.get_pollution_value())
         return temp
 
