@@ -144,6 +144,15 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
         x = x + 10
     return new_map
 
+def create_covariance_matrix(num_points_on_side, points,  length_scale):
+
+    covariance = []
+    for i in range(0,len(num_points_on_side)):
+        covariance.append([])
+        for j in range(0,len(num_points_on_side)):
+            covariance[i].append(np.exp(-np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
+
+    return covariance
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
     """
@@ -154,7 +163,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     """
 
     # kernel = DP(1)
-    kernel = RBF(1.0, (1e-2, 1e2)) * C(1)
+    # kernel = RBF(10, (1e-2, 1e2)) * C(1)
     gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
@@ -169,6 +178,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list = known_points_position_list
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
+
 
     return gp.predict(wanted_point_positions)
 
@@ -332,6 +342,8 @@ def run_interpolation_with_various_betas(points, kernel=RBF(10, (1e-2, 1e2)) * C
     return rmse_data
 
 
+
+
 def see_what_its_doing_1d():
     """
     Graphs all points and interpolates unknown points, useful for visualizing Gaussian Interpolation and affects of kernals
@@ -364,10 +376,10 @@ def see_what_its_doing_1d():
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
 
-random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
+# random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
 
-run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
-print(to_list_of_positions(random_total_points_2d))
+# run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
+# print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
 
