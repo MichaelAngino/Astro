@@ -69,7 +69,6 @@ class MyTestCase(unittest.TestCase):
         for key in counter.keys():
             counter[key] = counter[key] / num_of_runs
 
-
         # for i in range(0, 9):
         #     self.assertAlmostEqual(.5, counter[i], None, None, .02)
 
@@ -125,7 +124,6 @@ class MyTestCase(unittest.TestCase):
         distance_between_points = Pollution.distance(first_point, second_point)
         self.assertEqual(4.0, distance_between_points)
 
-
         points = {0: first_point, 1: second_point}
         covariance = Pollution.create_covariance_matrix(points, 1)
         self.assertEqual(1.0, covariance[0][0])
@@ -137,3 +135,6 @@ class MyTestCase(unittest.TestCase):
         covariance = Pollution.create_covariance_matrix(points, .00001)
         self.assertEqual(1.0, covariance[0][0])
         self.assertEqual(1.0, covariance[1][1])
+
+        test_points = Pollution.create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 1)
+        # don't know how to check whether this method works

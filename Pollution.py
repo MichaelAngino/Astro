@@ -144,6 +144,54 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
         x = x + 10
     return new_map
 
+
+def create_points_with_spatially_correlated_pollution_2d(side_length, mean, length_scale, num_maps):
+    '''
+    Creates a map of pollution values determined by their spatial correlation
+    :param side_length: Number of points on each side of the matrix
+    :param mean: Mean of the gaussian distribution of pollution values
+    :param length_scale: The length scale of the RBF kernel
+    :param num_maps: Number of pollution maps used in data
+    '''
+    # with vars names: np.random.multivariate_normal(mean_vector_of_each_point=[0, 0], COV=[[1,1], [1,1]] , nb_maps=1)[id_map=0]
+    mean_vector = []
+    for i in range(side_length * side_length):
+        mean_vector.append(mean)
+
+    initial_point_map = {}
+    x = 5
+    label_index = 0
+    for i in range(0, side_length):
+        y = 5
+        for j in range(0, side_length):
+            initial_point_map[label_index] = Point(label_index, 'NaN', x, y)
+            label_index += 1
+            y += 10
+        x += 10
+
+    new_map = {}
+    covariance_matrix = create_covariance_matrix(initial_point_map, length_scale)
+    '''DEBUGGING
+    print(len(initial_point_map))
+    for i in range(len(covariance_matrix)):
+        for j in range(len(covariance_matrix[0])):
+            print(covariance_matrix[i][j], end=' ')
+        print()
+    # print(str(len(mean_vector)) + " "+ str(len(covariance_matrix)))
+    '''
+    new_x = 5
+    new_label_index = 0
+    for i in range(0, side_length):
+        new_y = 5
+        for j in range(0, side_length):
+            new_map[new_label_index] = Point(new_label_index, np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps), x, y)
+            new_y += 10
+        new_x += 10
+
+    return new_map
+
+
+
 def create_covariance_matrix(points,  length_scale):
     """
     Creates Covariance Matrix
@@ -153,12 +201,14 @@ def create_covariance_matrix(points,  length_scale):
     """
 
     covariance = []
-    for i in range(0,len(points)):
+    for i in range(0, len(points)):
         covariance.append([])
-        for j in range(0,len(points)):
-            covariance[i].append(np.exp(-np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
+        for j in range(0, len(points)):
+            covariance[i].append(
+                np.exp(-np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
 
     return covariance
+
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
     """
@@ -232,6 +282,7 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
         interpolated_maps[label] = interpolate_unknown_points(known_points, all_points, kernel, fixed)
 
     return interpolated_maps
+
 
 
 
@@ -370,8 +421,6 @@ def run_interpolation_with_various_betas(points, kernel=RBF(10, (1e-2, 1e2)) * C
     return rmse_data
 
 
-
-
 def see_what_its_doing_1d():
     """
     Graphs all points and interpolates unknown points, useful for visualizing Gaussian Interpolation and affects of kernals
@@ -399,7 +448,6 @@ def see_what_its_doing_1d():
     plt.xlabel("Point Label")
     plt.ylabel("Pollution Value")
     plt.show()
-
 
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
