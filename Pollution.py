@@ -183,6 +183,34 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     return gp.predict(wanted_point_positions)
 
 
+def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
+    """
+    Interpolate pollution values for points that are have not been measured
+    :param known_points: A Dictionary of all points that have been measured {label:point}
+    :param all_points: A Dictionary of all points that exist {Label: point}
+    :return: A new map with interpolated pollution values {Label : point}
+    """
+    unknown_positions = []
+    unknown_labels = []
+    for i in range(0, len(
+            all_points)):  # Creates a list of posistions of points that have not been measured and a list of their respective labels
+        if not (i in known_points):
+            unknown_positions.append(all_points.get(i).get_position())
+            unknown_labels.append(i)
+
+    interpolated_pollution_values = interpolate_points_using_positions(known_points,
+                                                                       unknown_positions,
+                                                                       kernel)  # interpolates the pollution values for the posistions where we have not measured pollution values
+
+    interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
+
+    for i in range(0, len(
+            unknown_labels)):  # adds missing points and their interpolated pollution values into the new dictionary
+        interpolated_map[unknown_labels[i]] = all_points.get(unknown_labels[i]).copy()
+        interpolated_map[unknown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
+
+    return interpolated_map
+
 def pick_uniform_random_points(points, pick_number):
     """
     Picks a number of points from a list of points using a uniform random distribution
@@ -231,33 +259,7 @@ def pick_poisson_random_points(points, pick_number, lam):
     return new_map
 
 
-def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
-    """
-    Interpolate pollution values for points that are have not been measured
-    :param known_points: A Dictionary of all points that have been measured {label:point}
-    :param all_points: A Dictionary of all points that exist {Label: point}
-    :return: A new map with interpolated pollution values {Label : point}
-    """
-    unknown_positions = []
-    unknown_labels = []
-    for i in range(0, len(
-            all_points)):  # Creates a list of posistions of points that have not been measured and a list of their respective labels
-        if not (i in known_points):
-            unknown_positions.append(all_points.get(i).get_position())
-            unknown_labels.append(i)
 
-    interpolated_pollution_values = interpolate_points_using_positions(known_points,
-                                                                       unknown_positions,
-                                                                       kernel)  # interpolates the pollution values for the posistions where we have not measured pollution values
-
-    interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
-
-    for i in range(0, len(
-            unknown_labels)):  # adds missing points and their interpolated pollution values into the new dictionary
-        interpolated_map[unknown_labels[i]] = all_points.get(unknown_labels[i]).copy()
-        interpolated_map[unknown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
-
-    return interpolated_map
 
 
 def to_list_of_positions(points):
