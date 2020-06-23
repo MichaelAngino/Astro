@@ -1,13 +1,15 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-# import sklearn as sk
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct as DP
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 
 # test comment
+
+# np.random.multivariate_normal([0, 0], [[1,1], [1,1]] , 1)[0]
+# with vars names: np.random.multivariate_normal(mean_vector_of_each_point=[0, 0], COV=[[1,1], [1,1]] , nb_maps=1)[id_map=0]
 
 class Point:
     """
@@ -101,6 +103,10 @@ def copy_dictionary_with_points(points):
     return new_dict
 
 
+def distance(first_point, second_point):
+    return math.sqrt(math.pow(first_point.x - second_point.x, 2) + math.pow(first_point.y - second_point.y, 2))
+
+
 def create_points_with_random_pollution_1d(length, mean, std):
     """
     Creates a map of points with random Pollution Values using a gaussian distribution in 1D evenly starting at x = 05 every 10
@@ -132,14 +138,14 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
     for i in range(0, side_length):
         y = 5
         for j in range(0, side_length):
-            new_map[label_index] = (Point(label_index, np.random.normal(mean, std), x,y))
-            label_index = label_index+1
+            new_map[label_index] = (Point(label_index, np.random.normal(mean, std), x, y))
+            label_index = label_index + 1
             y = y + 10
         x = x + 10
     return new_map
 
 
-def interpolate_points_using_positions(known_points, wanted_point_positions, kernel = RBF(10, (1e-2, 1e2)) * C(1)):
+def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
     """
     Predicts points based on known data using Kriging (Gaussian Processes)
     :param known_points: list of points
@@ -148,7 +154,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     """
 
     # kernel = DP(1)
-    # kernel = RBF(10, (1e-2, 1e2)) * C(1)
+    kernel = RBF(1.0, (1e-2, 1e2)) * C(1)
     gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
@@ -163,7 +169,6 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list = known_points_position_list
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
-
 
     return gp.predict(wanted_point_positions)
 
@@ -216,7 +221,7 @@ def pick_poisson_random_points(points, pick_number, lam):
     return new_map
 
 
-def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)) * C(1)):
+def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -232,7 +237,8 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
             unknown_labels.append(i)
 
     interpolated_pollution_values = interpolate_points_using_positions(known_points,
-                                                                       unknown_positions,kernel)  # interpolates the pollution values for the posistions where we have not measured pollution values
+                                                                       unknown_positions,
+                                                                       kernel)  # interpolates the pollution values for the posistions where we have not measured pollution values
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -304,7 +310,7 @@ def run_interpolations_with_random_betas_1d():
     plot_numbers(rmse_values, picked_points_values)
 
 
-def run_interpolation_with_various_betas(points, kernel =RBF(10, (1e-2, 1e2)) * C(1)):
+def run_interpolation_with_various_betas(points, kernel=RBF(10, (1e-2, 1e2)) * C(1)):
     """
     Runs Interpolation with number of picked points(beta) from 1 to all points-1 picked and using uniform distribution in
     the picking in 1 Dimesnsion
@@ -324,8 +330,6 @@ def run_interpolation_with_various_betas(points, kernel =RBF(10, (1e-2, 1e2)) * 
     plot_numbers(rmse_data, range(1, len(points)))
 
     return rmse_data
-
-
 
 
 def see_what_its_doing_1d():
@@ -362,7 +366,7 @@ def see_what_its_doing_1d():
 
 random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
 
-# run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
+run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
 print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph

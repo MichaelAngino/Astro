@@ -119,8 +119,8 @@ class MyTestCase(unittest.TestCase):
         data = Pollution.run_interpolation_with_various_betas(test_points)
         print()
 
-
-
-
-
-
+    def test_covariance_matrix(self):
+        first_point = Pollution.Point(1, 100, 5, 10)
+        second_point = Pollution.Point(2, 100, 5, 14)
+        distance_between_points = Pollution.distance(first_point, second_point)
+        self.assertEqual(4.0, distance_between_points)
