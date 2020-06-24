@@ -477,7 +477,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
         picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number)
         interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
-                               RBF(np.random.random_integers(-100, 100), (1e-2, 1e2)) * C(1), fixed=False)[0]
+                               RBF(np.random.random_integers(.00001, 100), (1e-2, 1e2)) * C(1), fixed=False)[0]
 
         not_cheating_data.append(average_rmse_of_maps(interpolated_points))
 
@@ -488,7 +488,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(length_scale,
-                                                                                        (length_scale - 1,
+                                                                                        (length_scale - .001,
                                                                                          length_scale + 1)) * C(1),  fixed=False)[
             0]
 
