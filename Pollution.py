@@ -235,10 +235,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
 
-    return (gp.predict(wanted_point_positions), gp.get_params())
+    return (gp.predict(wanted_point_positions), gp.get_params()['kernel__length_scale'])
 
 
-def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
+def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)), fixed = False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -269,7 +269,7 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
 
     return (interpolated_map, length_scale)
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)), fixed = False):
     """
 
     :param known_points: A map of maps of all points that have been measured
@@ -433,6 +433,7 @@ def run_interpolation_with_various_betas(points, kernel=RBF(10, (1e-2, 1e2)) * C
     return rmse_data
 
 
+
 def see_what_its_doing_1d():
     """
     Graphs all points and interpolates unknown points, useful for visualizing Gaussian Interpolation and affects of kernals
@@ -462,6 +463,9 @@ def see_what_its_doing_1d():
     plt.show()
 
 
+def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_length, mean):
+
+
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
 
@@ -475,10 +479,10 @@ def see_what_its_doing_1d():
 random_points1 = {1:create_points_with_random_pollution_2d(10, 100, 10)}
 picked_points = pick_uniform_random_points_on_map_of_maps(random_points1,10)
 
-interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, random_points1)
-print()
-# see_what_its_doing()
 
+print(interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, random_points1))
+# see_what_its_doing()
+print()
 # print(Point(1, 1, 1))
 #
 #
