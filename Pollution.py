@@ -380,7 +380,7 @@ def average_rmse_of_maps(maps_of_points):
     num_of_maps = len(maps_of_points)
     sum = 0
     for label in maps_of_points.keys():
-        sum += root_mean_square_error(maps_of_points[label])
+        sum += root_mean_square_error(maps_of_points[label][0])
     return sum / num_of_maps
 
 
@@ -477,7 +477,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
         picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number)
         interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
-                               RBF(np.random.random_integers(.00001, 100), (1e-2, 1e2)) * C(1), fixed=False)[0]
+                               RBF(np.random.randint(1e-05, 100 + 1)) * C(1), fixed=False)
 
         not_cheating_data.append(average_rmse_of_maps(interpolated_points))
 
@@ -489,8 +489,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(length_scale,
                                                                                         (length_scale - .001,
-                                                                                         length_scale + 1)) * C(1),  fixed=False)[
-            0]
+                                                                                         length_scale + 1)) * C(1),  fixed=False)
 
         cheating_data.append(average_rmse_of_maps(interpolated_points))
 
@@ -507,7 +506,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
 # print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
-run_experiment_with_various_length_scales(1, 20, 10, 100, 10, 2)
+run_experiment_with_various_length_scales(1, 20, 10, 100, 20, 5)
 
 #
 #
