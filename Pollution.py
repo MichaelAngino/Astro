@@ -200,7 +200,7 @@ def create_covariance_matrix(points, length_scale):
     return covariance
 
 
-def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=RBF(10, (1e-2, 1e2)) * C(1),
+def interpolate_points_using_positions(known_points, wanted_point_positions, kernel= None,
                                        fixed=False):
     """
      Predicts points based on known data using Kriging (Gaussian Processes)
@@ -233,10 +233,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
-    return (gp.predict(wanted_point_positions), gp.get_params()['kernel__length_scale'])
+    return (gp.predict(wanted_point_positions), gp.kernel_.length_scale)
 
 
-def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)), fixed=False):
+def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -268,8 +268,7 @@ def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1
     return (interpolated_map, length_scale)
 
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)),
-                                                          fixed=False):
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False):
     """
 
     :param known_points: A map of maps of all points that have been measured
@@ -505,8 +504,14 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
 # print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
-run_experiment_with_various_length_scales(1, 20, 10, 100, 20, 1)
+# run_experiment_with_various_length_scales(1, 200, 10, 100, 20, 1)
 
+
+a = create_points_with_spatially_correlated_pollution_2d(10,100,20,1)
+b = pick_uniform_random_points_on_map_of_maps(a,20)
+c = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(20), fixed=True)
+d = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(1) )
+print()
 #
 #
 # random_points1 = create_points_with_random_pollution(10, 100, 10)
