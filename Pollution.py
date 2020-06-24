@@ -215,10 +215,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
     if fixed:
-        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=4,
+        gp = GaussianProcessRegressor(kernel, alpha = .1, n_restarts_optimizer=4,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=4)  # Instantiate an optimized Gaussian Process model
+        gp = GaussianProcessRegressor(kernel, alpha=.001, n_restarts_optimizer=4)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -233,7 +233,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
-    return (gp.predict(wanted_point_positions), gp.get_params()['kernel__k1__length_scale'])
+    return (gp.predict(wanted_point_positions), gp.get_params()['kernel__length_scale'])
 
 
 def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)), fixed=False):
@@ -477,7 +477,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
         picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number)
         interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
-                               RBF(np.random.randint(1e-05, 100 + 1)) * C(1), fixed=False)
+                               RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
         not_cheating_data.append(average_rmse_of_maps(interpolated_points))
 
@@ -488,8 +488,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
         picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(length_scale,
-                                                                                        (length_scale - .001,
-                                                                                         length_scale + 1)) * C(1),  fixed=False)
+                                                                                        ),  fixed=True)
 
         cheating_data.append(average_rmse_of_maps(interpolated_points))
 
@@ -506,7 +505,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
 # print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
-run_experiment_with_various_length_scales(1, 20, 10, 100, 20, 5)
+run_experiment_with_various_length_scales(1, 20, 10, 100, 20, 1)
 
 #
 #
