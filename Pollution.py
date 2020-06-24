@@ -463,7 +463,16 @@ def see_what_its_doing_1d():
     plt.show()
 
 
-def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_length, mean):
+def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_length, mean, pick_number, number_of_maps):
+
+
+    not_cheating_data = {}
+    for length_scale in range(bottom_bound,top_bound):
+        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
+        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number)
+        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, False)
+
+
 
 
 # see_what_its_doing_1d()
