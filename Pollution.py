@@ -182,8 +182,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, leng
     return pollution_maps
 
 
-
-def create_covariance_matrix(points,  length_scale):
+def create_covariance_matrix(points, length_scale):
     """
     Creates Covariance Matrix
     :param points: Map of all points
@@ -215,11 +214,11 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = DP(1)
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
-
     if fixed:
-        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4, optimizer= None)  # Instantiate a fixed Gaussian Process model
+        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4,
+                                      optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate a Gaussian Process model
+        gp = GaussianProcessRegressor(kernel, alpha=10, n_restarts_optimizer=4)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -233,12 +232,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list = known_points_position_list
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
+    return gp.predict(wanted_point_positions), gp.get_params()
 
 
-    return (gp.predict(wanted_point_positions), gp.get_params())
-
-
-def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
+def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1), fixed=False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -256,9 +253,9 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
             unknown_labels.append(i)
 
     interpolated_pollution_values, length_scale = interpolate_points_using_positions(known_points,
-                                                                       unknown_positions,
-                                                                       kernel, fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
-
+                                                                                     unknown_positions,
+                                                                                     kernel,
+                                                                                     fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -269,7 +266,9 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
 
     return (interpolated_map, length_scale)
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)) * C(1), fixed = False):
+
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)) * C(1),
+                                                          fixed=False):
     """
 
     :param known_points: A map of maps of all points that have been measured
@@ -296,9 +295,10 @@ def pick_uniform_random_points_on_map_of_maps(points, pick_number):
 
     new_map = {}
     for label in points.keys():
-        new_map[label] = pick_uniform_random_points(points[label],pick_number)
+        new_map[label] = pick_uniform_random_points(points[label], pick_number)
 
     return new_map
+
 
 def pick_uniform_random_points(points, pick_number):
     """
@@ -348,9 +348,6 @@ def pick_poisson_random_points(points, pick_number, lam):
     return new_map
 
 
-
-
-
 def to_list_of_positions(points):
     """
     Converts a dictionary of points into a list of posistions [[x1,y1],[x2,y2]]
@@ -375,6 +372,14 @@ def root_mean_square_error(points):
         sum += pow(point.get_pollution_value() - point.get_actual_pollution_value(), 2)
     rmse = math.sqrt(sum / len(points))
     return rmse
+
+
+def average_rmse_of_maps(maps_of_points):
+    num_of_maps = len(maps_of_points)
+    sum = 0
+    for i in range(len(maps_of_points)):
+        sum += root_mean_square_error(maps_of_points[i])
+    return sum / num_of_maps
 
 
 def plot_numbers(rmse_values, picked_points):
@@ -472,8 +477,8 @@ def see_what_its_doing_1d():
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
 
-random_points1 = {1:create_points_with_random_pollution_2d(10, 100, 10)}
-picked_points = pick_uniform_random_points_on_map_of_maps(random_points1,10)
+random_points1 = {1: create_points_with_random_pollution_2d(10, 100, 10)}
+picked_points = pick_uniform_random_points_on_map_of_maps(random_points1, 10)
 
 interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, random_points1)
 print()
