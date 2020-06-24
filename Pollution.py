@@ -281,14 +281,24 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
 
     interpolated_maps = {}
     for label in all_points.keys():
-        interpolated_maps[label] = interpolate_unknown_points(known_points, all_points, kernel, fixed)
+        interpolated_maps[label] = interpolate_unknown_points(known_points[label], all_points[label], kernel, fixed)
 
     return interpolated_maps
 
 
+def pick_uniform_random_points_on_map_of_maps(points, pick_number):
+    """
+        Picks a number of points from a list of points using a uniform random distribution for each map in a map
+        :param points: Map of all the points {label: point}
+        :param pick_number: Number of points to pick
+        :return: A new map with the picked points {label: point}
+        """
 
+    new_map = {}
+    for label in points.keys():
+        new_map[label] = pick_uniform_random_points(points[label],pick_number)
 
-
+    return new_map
 
 def pick_uniform_random_points(points, pick_number):
     """
@@ -462,6 +472,11 @@ def see_what_its_doing_1d():
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
 
+random_points1 = {1:create_points_with_random_pollution_2d(10, 100, 10)}
+picked_points = pick_uniform_random_points_on_map_of_maps(random_points1,10)
+
+interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, random_points1)
+print()
 # see_what_its_doing()
 
 # print(Point(1, 1, 1))
