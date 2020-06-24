@@ -382,16 +382,16 @@ def average_rmse_of_maps(maps_of_points):
     return sum / num_of_maps
 
 
-def plot_numbers(rmse_values, picked_points):
+def plot_numbers(x_axis, y_axis, x_label, y_label):
     """
     Plots Numbers on a graph
-    :param rmse_values: Y- value for the graph in list form
-    :param picked_points: X- values for the graph in list form
+    :param x_axis: X-value for the graph in list form
+    :param y_axis: Y-values for the graph in list form
     :return:
     """
-    plt.plot(picked_points, rmse_values, "ro")
-    plt.xlabel("Number of Known Measurements")
-    plt.ylabel("RMSE")
+    plt.plot(x_axis, y_axis, "ro")
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
     plt.show()
 
 
