@@ -215,10 +215,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
     if fixed:
-        gp = GaussianProcessRegressor(kernel,  n_restarts_optimizer=4,
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=4,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel,  n_restarts_optimizer=4)  # Instantiate an optimized Gaussian Process model
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=4)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -233,11 +233,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
-
     return (gp.predict(wanted_point_positions), gp.get_params()['kernel__k1__length_scale'])
 
 
-def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2, 1e2)), fixed = False):
+def interpolate_unknown_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)), fixed=False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
@@ -268,7 +267,9 @@ def interpolate_unknown_points(known_points, all_points, kernel = RBF(10, (1e-2,
 
     return (interpolated_map, length_scale)
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel =RBF(10, (1e-2, 1e2)), fixed = False):
+
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=RBF(10, (1e-2, 1e2)),
+                                                          fixed=False):
     """
 
     :param known_points: A map of maps of all points that have been measured
@@ -317,7 +318,8 @@ def pick_uniform_random_points(points, pick_number):
             random_picks.append(random_num)
     new_map = {}
     for i in random_picks:  # assigns and copies picked points into a new dictionary
-        new_map[i] = Point(i, points.get(i).get_actual_pollution_value(), points.get(i).get_x_cord(), points.get(i).get_y_cord())
+        new_map[i] = Point(i, points.get(i).get_actual_pollution_value(), points.get(i).get_x_cord(),
+                           points.get(i).get_y_cord())
         new_map.get(i).read_pollution_value()
 
     return new_map
@@ -377,16 +379,18 @@ def root_mean_square_error(points):
 def average_rmse_of_maps(maps_of_points):
     num_of_maps = len(maps_of_points)
     sum = 0
-    for i in range(len(maps_of_points)):
-        sum += root_mean_square_error(maps_of_points[i])
+    for label in maps_of_points.keys():
+        sum += root_mean_square_error(maps_of_points[label])
     return sum / num_of_maps
 
 
-def plot_numbers(x_axis, y_axis,x_axis_2, y_axis_2, x_label, y_label):
+def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label):
     """
     Plots Numbers on a graph
-    :param x_axis: X-value for the graph in list form
-    :param y_axis: Y-values for the graph in list form
+    :param y_label: Label for Y-axis of graph
+    :param x_label: Label for X-axis of graph
+    :param x_axis, x_axis_2: X-value for the graph in list form
+    :param y_axis, y_axis_2: Y-values for the graph in list form
     :return:
     """
     plt.plot(x_axis, y_axis, "ro", x_axis_2, y_axis_2, "go")
@@ -438,7 +442,6 @@ def run_interpolation_with_various_betas(points, kernel=RBF(10, (1e-2, 1e2)) * C
     return rmse_data
 
 
-
 def see_what_its_doing_1d():
     """
     Graphs all points and interpolates unknown points, useful for visualizing Gaussian Interpolation and affects of kernals
@@ -469,9 +472,6 @@ def see_what_its_doing_1d():
 
 
 def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_length, mean, pick_number, number_of_maps):
-
-
-
     not_cheating_data = []
     for length_scale in range(bottom_bound,top_bound):
         points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
@@ -484,7 +484,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
     cheating_data = []
     for length_scale in range(bottom_bound, top_bound):
         points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, length_scale,
-                                                                       number_of_maps)
+                                                                      number_of_maps)
         picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(length_scale,
@@ -494,7 +494,9 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
 
         cheating_data.append(average_rmse_of_maps(interpolated_points))
 
-    plot_numbers(range(bottom_bound, top_bound,), not_cheating_data, range(bottom_bound,top_bound), cheating_data, "Length Scale", "RMSE")
+    plot_numbers(range(bottom_bound, top_bound, ), not_cheating_data, range(bottom_bound, top_bound), cheating_data,
+                 "Length Scale", "RMSE")
+
 
 # see_what_its_doing_1d()
 # run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
@@ -505,7 +507,7 @@ def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_leng
 # print(to_list_of_positions(random_total_points_2d))
 # run_interpolation_with_various_betas(random_total_points_2d, DP(1))
 # run_interpolations_with_random_betas() #Plots points on graph
-run_experiment_with_various_length_scales(1,20,10, 100, 10, 2 )
+run_experiment_with_various_length_scales(1, 20, 10, 100, 10, 2)
 
 #
 #
