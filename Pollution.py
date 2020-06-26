@@ -543,31 +543,53 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
 
 
 
-def test_plotting_in_3d():
+def see_what_its_doing_2d(length_scale, fixed):
     fig = plt.figure()
     sub = fig.add_subplot(1,1,1,projection ="3d")
-    t = np.linspace(0,4*np.pi,500)
+
 
     def rotate(angle):
         sub.view_init(azim=angle)
 
-    x= np.sin(t)
-    x= np.cos(t)
-    y = np.sin(t)
-    z = t
-    sub.plot(x,y,z)
+    a = create_points_with_spatially_correlated_pollution_2d(10, 100, length_scale, 1)
+    b = pick_uniform_random_points_on_map_of_maps(a, 20)
+    c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=fixed)
+
+    x1 = []
+    y1= []
+    z1 =[]
+    for point in b[0].values():
+        x1.append(point.get_x_cord())
+        y1.append(point.get_y_cord())
+        z1.append(point.get_pollution_value())
+
+    x2=[]
+    y2=[]
+    z2=[]
+
+    for label, point in c[0][0].items():
+        if not label in b[0].keys():
+            x2.append(point.get_x_cord())
+            y2.append(point.get_y_cord())
+            z2.append(point.get_pollution_value())
+
+
+
+    sub.scatter(x1,y1,z1,marker="o",  edgecolor="r", facecolor="r")
+    sub.scatter(x2,y2,z2,marker="^",  edgecolor="g", facecolor="g")
 
     rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0,362,2),interval=100)
     # mywriter = animation.FFMpegWriter(fps=60)
     # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
+    print("Starting Save")
     rot_animation.save('rotation.gif', dpi=80, writer='imagemagick')
-
+    print("Finished Save")
 
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(50,500,10,100,20,2)
 
 
-test_plotting_in_3d()
+see_what_its_doing_2d(100, True)
 
 
 # length_scale = 100
