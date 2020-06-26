@@ -543,17 +543,23 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
 
 
 
+
 def see_what_its_doing_2d(length_scale, fixed):
-    fig = plt.figure()
-    sub = fig.add_subplot(1,1,1,projection ="3d")
+    """
+    3D graphs the pollution value of the measured and interpolated pollution values
+    :param length_scale:
+    :param fixed:
+    :return:
+    """
 
 
-    def rotate(angle):
-        sub.view_init(azim=angle)
 
     a = create_points_with_spatially_correlated_pollution_2d(10, 100, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
-    c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=fixed)
+    if fixed:
+        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed= True)
+    else:
+        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1,10000)), fixed=False)
 
     x1 = []
     y1= []
@@ -573,24 +579,92 @@ def see_what_its_doing_2d(length_scale, fixed):
             y2.append(point.get_y_cord())
             z2.append(point.get_pollution_value())
 
+    plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,"Rotating Graph.gif")
 
 
-    sub.scatter(x1,y1,z1,marker="o",  edgecolor="r", facecolor="r")
-    sub.scatter(x2,y2,z2,marker="^",  edgecolor="g", facecolor="g")
+    # mywriter = animation.FFMpegWriter(fps=60)
+    # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
 
-    rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0,362,2),interval=100)
+
+def see_what_its_doing_2d_comparison(length_scale):
+    """
+    ALlows visual comparison between interpolation with a cheating and not cheating interpolation
+    :param length_scale:
+    :return:
+    """
+
+    a = create_points_with_spatially_correlated_pollution_2d(10, 100, length_scale, 1)
+    b = pick_uniform_random_points_on_map_of_maps(a, 20)
+    c1 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed= True)
+    c2 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1,10000)), fixed=False)
+
+    x1= []
+    y1= []
+    z1 =[]
+    for point in b[0].values():
+        x1.append(point.get_x_cord())
+        y1.append(point.get_y_cord())
+        z1.append(point.get_pollution_value())
+
+    x2_fixed=[]
+    y2_fixed=[]
+    z2_fixed=[]
+
+    for label, point in c1[0][0].items():
+        if not label in b[0].keys():
+            x2_fixed.append(point.get_x_cord())
+            y2_fixed.append(point.get_y_cord())
+            z2_fixed.append(point.get_pollution_value())
+
+
+    x2_not_fixed = []
+    y2_not_fixed = []
+    z2_not_fixed = []
+
+    for label, point in c2[0][0].items():
+        if not label in b[0].keys():
+            x2_not_fixed.append(point.get_x_cord())
+            y2_not_fixed.append(point.get_y_cord())
+            z2_not_fixed.append(point.get_pollution_value())
+
+    plot_numbers_3d_and_save(x1,y1,z1,x2_fixed,y2_fixed,z2_fixed,"Fixed Rotating Graph.gif")
+    plot_numbers_3d_and_save(x1,y1,z1,x2_not_fixed,y2_not_fixed,z2_not_fixed, "Not Fixed Rotating Graph.gif")
+
+def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename):
+    """
+    Scatterplot in 3d and saves rotating gif to file
+    :param x1:
+    :param y1:
+    :param z1:
+    :param x2:
+    :param y2:
+    :param z2:
+    :param filename: File name ending in .gif
+    :return:
+    """
+    fig = plt.figure()
+    sub = fig.add_subplot(1, 1, 1, projection="3d")
+    sub.scatter(x1, y1, z1, marker="o", edgecolor="r", facecolor="r")
+    sub.scatter(x2, y2, z2, marker="^", edgecolor="g", facecolor="g")
+    def rotate(angle):
+        sub.view_init(azim=angle)
+    rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0, 362, 2), interval=100)
     # mywriter = animation.FFMpegWriter(fps=60)
     # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
     print("Starting Save")
-    rot_animation.save('rotation.gif', dpi=80, writer='imagemagick')
+    rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
-
+    
+    
+    
+    
+    
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(50,500,10,100,20,2)
 
 
-see_what_its_doing_2d(100, True)
-
+# see_what_its_doing_2d(100, False)
+see_what_its_doing_2d_comparison(100)
 
 # length_scale = 100
 # a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
