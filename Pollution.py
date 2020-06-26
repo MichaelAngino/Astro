@@ -1,9 +1,11 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from matplotlib import animation
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct as DP
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+from mpl_toolkits.mplot3d import Axes3D
 
 
 # test comment
@@ -156,7 +158,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, leng
     # with vars names: np.random.multivariate_normal(mean_vector_of_each_point=[0, 0], COV=[[1,1], [1,1]] , nb_maps=1)[id_map=0]
     mean_vector = []
     for i in range(side_length * side_length):
-        mean_vector.append(mean)
+        mean_vector.append(mean + 10 * np.random.rand())
     pollution_maps = {}
 
     point_map = {}
@@ -541,15 +543,39 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
 
 
 
-# run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-run_experiment_with_various_length_scales_linear(100,1000,10,100,20,10)
+def test_plotting_in_3d():
+    fig = plt.figure()
+    sub = fig.add_subplot(1,1,1,projection ="3d")
+    t = np.linspace(0,4*np.pi,500)
 
-# length_scale = 10
+    def rotate(angle):
+        sub.view_init(azim=angle)
+
+    x= np.sin(t)
+    x= np.cos(t)
+    y = np.sin(t)
+    z = t
+    sub.plot(x,y,z)
+
+    rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0,362,2),interval=100)
+    # mywriter = animation.FFMpegWriter(fps=60)
+    # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
+    rot_animation.save('rotation.gif', dpi=80, writer='imagemagick')
+
+
+# run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
+# run_experiment_with_various_length_scales_linear(50,500,10,100,20,2)
+
+
+test_plotting_in_3d()
+
+
+# length_scale = 100
 # a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
 # b = pick_uniform_random_points_on_map_of_maps(a,20)
 # c = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(length_scale), fixed=True)
 # d = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(1) )
-print()
+# print()
 
 
 #
