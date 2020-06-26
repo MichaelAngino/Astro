@@ -383,7 +383,7 @@ def average_rmse_of_maps(maps_of_points):
     return sum / num_of_maps
 
 
-def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label):
+def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_scale = False):
     """
     Plots Numbers on a graph
     :param y_label: Label for Y-axis of graph
@@ -395,6 +395,9 @@ def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label):
     plt.plot(x_axis, y_axis, "ro", x_axis_2, y_axis_2, "go")
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+    if x_log_scale:
+        plt.xscale("log")
+
     plt.show()
 
 
@@ -470,48 +473,85 @@ def see_what_its_doing_1d():
     plt.show()
 
 
-def run_experiment_with_various_length_scales(bottom_bound, top_bound, side_length, mean, pick_number, number_of_maps):
+def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean, pick_number, number_of_maps):
+    """
+    Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses linearly)  in 2D. Uses uniform point selection and RBF kernel
+    :param bottom_bound: bottom bound of length scale
+    :param top_bound: top bound of length scale not inclusive
+    :param side_length: number of points on one side of the square of points
+    :param mean: Mean pollution value to be set
+    :param pick_number: the Beta (the number of points to select to be measured)
+    :param number_of_maps: Number of trials for each length scale
+    :return:
+    """
     not_cheating_data = []
-    for length_scale in range(bottom_bound,top_bound):
-        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps)
-        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number)
-        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+    cheating_data = []
+    for length_scale in range(bottom_bound,top_bound): #runs through each length scale
+        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps) # Creates all points
+        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number) # Picks points to be measured
+        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
                                RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
-        not_cheating_data.append(average_rmse_of_maps(interpolated_points))
-
-    cheating_data = []
-    for length_scale in range(bottom_bound, top_bound):
-        points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, length_scale,
-                                                                      number_of_maps)
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)
-        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+        not_cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rms of all the trials for the noncheating method
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using cheating method
                                                                                     RBF(length_scale,
-                                                                                        ),  fixed=True)
+                                                                                        ), fixed=True)
 
-        cheating_data.append(average_rmse_of_maps(interpolated_points))
+        cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rmse of all the trials for the cheating method
+        print(length_scale)
 
-    plot_numbers(range(bottom_bound, top_bound, ), not_cheating_data, range(bottom_bound, top_bound), cheating_data,
+
+    plot_numbers(range(bottom_bound, top_bound, ), not_cheating_data, range(bottom_bound, top_bound), cheating_data, #Plots the data Red is not cheating, Green Cheating
                  "Length Scale", "RMSE")
 
+def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_length, mean, pick_number, number_of_maps):
+    """
+    Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses by powers of 10)  in 2D. Uses uniform point selection and RBF kernel
+    :param bottom_bound: bottom bound of length scale
+    :param top_bound: top bound of length scale not inclusive
+    :param side_length: number of points on one side of the square of points
+    :param mean: Mean pollution value to be set
+    :param pick_number: the Beta (the number of points to select to be measured)
+    :param number_of_maps: Number of trials for each length scale
+    :return:
+    """
+    not_cheating_data = []
+    cheating_data = []
+    length_scale = bottom_bound
+    length_scale_list = []
+    while length_scale <= top_bound: #runs through each length scale
+        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,length_scale, number_of_maps) # Creates all points
+        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number) # Picks points to be measured
+        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
+                               RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
-# see_what_its_doing_1d()
-# run_interpolation_with_various_betas(create_points_with_random_pollution_1d(100, 100, 10))
+        not_cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rms of all the trials for the noncheating method
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using cheating method
+                                                                                    RBF(length_scale,
+                                                                                        ), fixed=True)
 
-# random_total_points_2d = create_points_with_random_pollution_2d(10, 100, 10)
-
-# run_interpolation_with_various_betas(random_total_points_2d, RBF(10, (1e-2, 1e2)) * C(1))
-# print(to_list_of_positions(random_total_points_2d))
-# run_interpolation_with_various_betas(random_total_points_2d, DP(1))
-# run_interpolations_with_random_betas() #Plots points on graph
-# run_experiment_with_various_length_scales(1, 200, 10, 100, 20, 1)
+        cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rmse of all the trials for the cheating method
+        length_scale_list.append(length_scale)
+        length_scale = length_scale * 10
 
 
-a = create_points_with_spatially_correlated_pollution_2d(10,100,20,1)
-b = pick_uniform_random_points_on_map_of_maps(a,20)
-c = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(20), fixed=True)
-d = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(1) )
+
+    plot_numbers(length_scale_list, not_cheating_data, length_scale_list, cheating_data,  #Plots the data Red is not cheating, Green Cheating
+                 "Length Scale", "RMSE", x_log_scale= True)
+
+
+
+# run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
+run_experiment_with_various_length_scales_linear(100,1000,10,100,20,10)
+
+# length_scale = 10
+# a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
+# b = pick_uniform_random_points_on_map_of_maps(a,20)
+# c = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(length_scale), fixed=True)
+# d = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(1) )
 print()
+
+
 #
 #
 # random_points1 = create_points_with_random_pollution(10, 100, 10)
