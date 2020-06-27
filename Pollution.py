@@ -664,7 +664,7 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename):
 
 
 # see_what_its_doing_2d(100, False)
-see_what_its_doing_2d_comparison(100)
+see_what_its_doing_2d_comparison(50)
 
 # length_scale = 100
 # a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
