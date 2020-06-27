@@ -29,6 +29,8 @@ class Point:
         # self.actual_pollution_value = actual_pollution_value
         self.pollution_value = float('NaN')
 
+        if actual_pollution_value < 0:
+            raise Exception("Set a negative actual_pollution_value")
         self.actual_pollution_value = actual_pollution_value
 
         self.x = x
@@ -53,6 +55,18 @@ class Point:
         :return: Nothing
         """
         self.pollution_value = new_pollution_value
+
+
+    def set_actual_pollution(self, new_actual_pollution_value):
+        """
+        Should rarely be used changes the true value of the pollution at a point
+        :param new_actual_pollution_value:
+        :return:
+        """
+
+        if new_actual_pollution_value < 0:
+            raise Exception("Tried to change APV to a negative actual_pollution_value")
+        self.actual_pollution_value = new_actual_pollution_value
 
     def get_label(self):
         return self.label
@@ -168,7 +182,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_
     for i in range(0, side_length):
         y = 5
         for j in range(0, side_length):
-            point_map[label_index] = Point(label_index, 'NaN', x, y)
+            point_map[label_index] = Point(label_index, float('NaN'), x, y)
             label_index += 1
             y += 10
         x += 10
@@ -180,7 +194,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_
 
     for i in range(num_maps):
         for j in range(side_length * side_length):
-            pollution_maps[i][j].actual_pollution_value = maps_of_pollution_values[i][j]
+            pollution_maps[i][j].set_actual_pollution(maps_of_pollution_values[i][j])
 
     return pollution_maps
 
@@ -373,11 +387,25 @@ def root_mean_square_error(points):
     param points: A dictionary of points {label : point}
     :return: The RMSE of the pollution values found through interpolation
     """
-    sum = 0
-    for point in points.values():
-        sum += pow(point.get_pollution_value() - point.get_actual_pollution_value(), 2)
-    rmse = math.sqrt(sum / len(points))
-    return rmse
+
+    normalized = True #allows manual change from normalized rmse and normal rmse
+
+    if not normalized:
+        sum = 0
+        for point in points.values():
+            sum += pow(np.abs(point.get_pollution_value()) - np.abs(point.get_actual_pollution_value()), 2)
+        rmse = math.sqrt(sum / len(points))
+        return rmse
+    else:
+        sum = 0
+        mean = 0
+        for point in points.values():
+            sum += pow(np.abs(point.get_pollution_value()) - np.abs(point.get_actual_pollution_value()), 2)
+            mean += point.get_actual_pollution_value()
+        rmse = math.sqrt(sum / len(points))
+        mean /= len(points.values())
+        return rmse / mean
+
 
 
 def average_rmse_of_maps(maps_of_points):
@@ -588,11 +616,13 @@ def see_what_its_doing_2d(length_scale, fixed):
     plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,"Rotating Graph.gif")
 
 
+
+
     # mywriter = animation.FFMpegWriter(fps=60)
     # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
 
 
-def see_what_its_doing_2d_comparison(length_scale):
+def see_what_its_doing_2d_comparison(length_scale, true_values = False):
     """
     ALlows visual comparison between interpolation with a cheating and not cheating interpolation
     :param length_scale:
@@ -633,6 +663,20 @@ def see_what_its_doing_2d_comparison(length_scale):
             y2_not_fixed.append(point.get_y_cord())
             z2_not_fixed.append(point.get_pollution_value())
 
+    if true_values:
+        x3_true_values = []
+        y3_true_values = []
+        z3_true_values = []
+
+        for label, point in a[0].items():
+            if not label in b[0].keys():
+                x3_true_values.append(point.get_x_cord())
+                y3_true_values.append(point.get_y_cord())
+                z3_true_values.append(point.get_actual_pollution_value())
+
+        plot_numbers_3d_and_save(x3_true_values,y3_true_values,z3_true_values,x2_fixed,y2_fixed,z2_fixed,"True Value Comparison Fixed Graph.gif")
+        plot_numbers_3d_and_save(x3_true_values,y3_true_values,z3_true_values,x2_not_fixed,y2_not_fixed,z2_not_fixed,"True value Not Fixed Graph.gif")
+
     plot_numbers_3d_and_save(x1,y1,z1,x2_fixed,y2_fixed,z2_fixed,"Fixed Rotating Graph.gif")
     plot_numbers_3d_and_save(x1,y1,z1,x2_not_fixed,y2_not_fixed,z2_not_fixed, "Not Fixed Rotating Graph.gif")
 
@@ -666,11 +710,12 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
     
     
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-# run_experiment_with_various_length_scales_linear(10,100,10,100,10,20,100,5)
+run_experiment_with_various_length_scales_linear(10,100,10,500,10,20,100,5)
 
+# run_experiment_with_various_length_scales_linear(1,1000,10,1000,10,20,1,10)
 
 # see_what_its_doing_2d(100, False)
-see_what_its_doing_2d_comparison(100)
+# see_what_its_doing_2d_comparison(10,True)
 
 # length_scale = 100
 # a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
