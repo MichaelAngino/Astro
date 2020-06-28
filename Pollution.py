@@ -234,10 +234,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
     if fixed:
-        gp = GaussianProcessRegressor(kernel, alpha = .001, n_restarts_optimizer=10,
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel, alpha=.001, n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -400,7 +400,7 @@ def root_mean_square_error(points):
         sum = 0
         mean = 0
         for point in points.values():
-            sum += pow(np.abs(point.get_pollution_value()) - np.abs(point.get_actual_pollution_value()), 2)
+            sum += pow(point.get_pollution_value() - point.get_actual_pollution_value(), 2)
             mean += point.get_actual_pollution_value()
         rmse = math.sqrt(sum / len(points))
         mean /= len(points.values())
@@ -583,12 +583,12 @@ def see_what_its_doing_2d(length_scale, fixed):
     3D graphs the pollution value of the measured and interpolated pollution values
     :param length_scale:
     :param fixed:
-    :return:
+    :return: Returns average rmse of the data
     """
 
 
 
-    a = create_points_with_spatially_correlated_pollution_2d(10, 100,10, length_scale, 1)
+    a = create_points_with_spatially_correlated_pollution_2d(10, 10000,10, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
     if fixed:
         c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed= True)
@@ -612,7 +612,7 @@ def see_what_its_doing_2d(length_scale, fixed):
             x2.append(point.get_x_cord())
             y2.append(point.get_y_cord())
             z2.append(point.get_pollution_value())
-
+    print(average_rmse_of_maps(c))
     plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,"Rotating Graph.gif")
 
 
@@ -710,11 +710,11 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
     
     
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-run_experiment_with_various_length_scales_linear(10,100,10,500,10,20,100,5)
+run_experiment_with_various_length_scales_linear(10,100,10,10000,5,20,100,5)
 
-# run_experiment_with_various_length_scales_linear(1,1000,10,1000,10,20,1,10)
 
-# see_what_its_doing_2d(100, False)
+
+# see_what_its_doing_2d(100, True)
 # see_what_its_doing_2d_comparison(10,True)
 
 # length_scale = 100
