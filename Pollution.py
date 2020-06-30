@@ -161,7 +161,7 @@ def create_points_with_random_pollution_2d(side_length, mean, std):
     return new_map
 
 
-def create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_dev, length_scale, num_maps, ):
+def create_points_with_spatially_correlated_pollution_2d(side_length, mean, standard_deviation, length_scale, num_maps):
     """
     Creates a map of pollution values determined by their spatial correlation
     :param side_length: Number of points on each side of the matrix
@@ -189,7 +189,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_
     for i in range(0, num_maps):
         pollution_maps[i] = copy_dictionary_with_points(point_map)
 
-    covariance_matrix = create_covariance_matrix(point_map, std_dev, length_scale)
+    covariance_matrix = create_covariance_matrix(point_map, length_scale, standard_deviation)
     maps_of_pollution_values = np.random.multivariate_normal(mean_vector, covariance_matrix, num_maps)
 
     for i in range(num_maps):
@@ -199,9 +199,10 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_
     return pollution_maps
 
 
-def create_covariance_matrix(points, length_scale,std_dev):
+def create_covariance_matrix(points, length_scale, standard_deviation):
     """
     Creates Covariance Matrix
+    :param standard_deviation: standard deviation of pollution data
     :param points: Map of all points
     :param length_scale: Length Scale
     :return: A matrix
@@ -211,15 +212,14 @@ def create_covariance_matrix(points, length_scale,std_dev):
     for i in range(0, len(points)):
         covariance.append([])
         for j in range(0, len(points)):
-            # covariance[i].append(
-            #     np.exp(-np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
-            covariance[i].append((std_dev ** 2) * np.exp(
-                -np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
+            covariance[i].append(
+                (standard_deviation ** 2) * np.exp(
+                    -np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
 
     return covariance
 
 
-def interpolate_points_using_positions(known_points, wanted_point_positions, kernel= None,
+def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False):
     """
      Predicts points based on known data using Kriging (Gaussian Processes)
@@ -252,7 +252,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
-    return (gp.predict(wanted_point_positions), gp.kernel_.length_scale)
+    return gp.predict(wanted_point_positions), gp.kernel_.length_scale
 
 
 def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False):
@@ -388,7 +388,7 @@ def root_mean_square_error(points):
     :return: The RMSE of the pollution values found through interpolation
     """
 
-    normalized = True #allows manual change from normalized rmse and normal rmse
+    normalized = False #allows manual change from normalized rmse and normal rmse
 
     if not normalized:
         sum = 0
@@ -416,7 +416,7 @@ def average_rmse_of_maps(maps_of_points):
     return sum / num_of_maps
 
 
-def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_scale = False):
+def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_scale=False):
     """
     Plots Numbers on a graph
     :param y_label: Label for Y-axis of graph
@@ -527,13 +527,16 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
         interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
                                RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
-        not_cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rms of all the trials for the noncheating method
-        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using cheating method
+        not_cheating_data.append(
+            average_rmse_of_maps(interpolated_points))  # adds average rms of all the trials for the noncheating method
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                    # Interpolates using cheating method
                                                                                     RBF(length_scale,
                                                                                         ), fixed=True)
 
-        cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rmse of all the trials for the cheating method
-        print(length_scale)
+        cheating_data.append(
+            average_rmse_of_maps(interpolated_points))  # adds average rmse of all the trials for the cheating method
+        # print(length_scale)
 
 
     plot_numbers(range(bottom_bound, top_bound, step), not_cheating_data, range(bottom_bound, top_bound,step), cheating_data, #Plots the data Red is not cheating, Green Cheating
@@ -561,21 +564,21 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
         interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
                                RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
-        not_cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rms of all the trials for the noncheating method
-        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using cheating method
+        not_cheating_data.append(
+            average_rmse_of_maps(interpolated_points))  # adds average rms of all the trials for the noncheating method
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                    # Interpolates using cheating method
                                                                                     RBF(length_scale,
                                                                                         ), fixed=True)
 
-        cheating_data.append(average_rmse_of_maps(interpolated_points)) #adds average rmse of all the trials for the cheating method
+        cheating_data.append(
+            average_rmse_of_maps(interpolated_points))  # adds average rmse of all the trials for the cheating method
         length_scale_list.append(length_scale)
         length_scale = length_scale * 10
 
-
-
-    plot_numbers(length_scale_list, not_cheating_data, length_scale_list, cheating_data,  #Plots the data Red is not cheating, Green Cheating
-                 "Length Scale", "RMSE", x_log_scale= True)
-
-
+    plot_numbers(length_scale_list, not_cheating_data, length_scale_list, cheating_data,
+                 # Plots the data Red is not cheating, Green Cheating
+                 "Length Scale", "RMSE", x_log_scale=True)
 
 
 def see_what_its_doing_2d(length_scale, fixed):
@@ -583,29 +586,29 @@ def see_what_its_doing_2d(length_scale, fixed):
     3D graphs the pollution value of the measured and interpolated pollution values
     :param length_scale:
     :param fixed:
-    :return: Returns average rmse of the data
+    :return:
     """
 
 
 
-    a = create_points_with_spatially_correlated_pollution_2d(10, 10000,10, length_scale, 1)
+    a = create_points_with_spatially_correlated_pollution_2d(10, 100,10, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
     if fixed:
-        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed= True)
+        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
     else:
-        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1,10000)), fixed=False)
+        c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1, 10000)), fixed=False)
 
     x1 = []
-    y1= []
-    z1 =[]
+    y1 = []
+    z1 = []
     for point in b[0].values():
         x1.append(point.get_x_cord())
         y1.append(point.get_y_cord())
         z1.append(point.get_pollution_value())
 
-    x2=[]
-    y2=[]
-    z2=[]
+    x2 = []
+    y2 = []
+    z2 = []
 
     for label, point in c[0][0].items():
         if not label in b[0].keys():
@@ -614,8 +617,6 @@ def see_what_its_doing_2d(length_scale, fixed):
             z2.append(point.get_pollution_value())
     print(average_rmse_of_maps(c))
     plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,"Rotating Graph.gif")
-
-
 
 
     # mywriter = animation.FFMpegWriter(fps=60)
@@ -631,27 +632,26 @@ def see_what_its_doing_2d_comparison(length_scale, true_values = False):
 
     a = create_points_with_spatially_correlated_pollution_2d(10, 100,10, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
-    c1 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed= True)
-    c2 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1,10000)), fixed=False)
+    c1 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
+    c2 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1, 10000)), fixed=False)
 
-    x1= []
-    y1= []
-    z1 =[]
+    x1 = []
+    y1 = []
+    z1 = []
     for point in b[0].values():
         x1.append(point.get_x_cord())
         y1.append(point.get_y_cord())
         z1.append(point.get_pollution_value())
 
-    x2_fixed=[]
-    y2_fixed=[]
-    z2_fixed=[]
+    x2_fixed = []
+    y2_fixed = []
+    z2_fixed = []
 
     for label, point in c1[0][0].items():
         if not label in b[0].keys():
             x2_fixed.append(point.get_x_cord())
             y2_fixed.append(point.get_y_cord())
             z2_fixed.append(point.get_pollution_value())
-
 
     x2_not_fixed = []
     y2_not_fixed = []
@@ -696,21 +696,22 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
     sub = fig.add_subplot(1, 1, 1, projection="3d")
     sub.scatter(x1, y1, z1, marker="o", edgecolor="r", facecolor="r")
     sub.scatter(x2, y2, z2, marker="^", edgecolor="g", facecolor="g")
+
     def rotate(angle):
         sub.view_init(azim=angle)
+
     rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0, 362, 2), interval=100)
     # mywriter = animation.FFMpegWriter(fps=60)
     # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
     print("Starting Save")
     rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
-    
-    
-    
-    
-    
+
+
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-run_experiment_with_various_length_scales_linear(10,100,10,1000,5,20,100,5)
+run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=300, length_addition=5,
+                                                 side_length=10, mean=100, pick_number=20,
+                                                 number_of_maps=2, standard_deviation=10)
 
 
 
@@ -718,10 +719,10 @@ run_experiment_with_various_length_scales_linear(10,100,10,1000,5,20,100,5)
 # see_what_its_doing_2d_comparison(10,True)
 
 # length_scale = 100
-# a = create_points_with_spatially_correlated_pollution_2d(10,100,length_scale,1)
-# b = pick_uniform_random_points_on_map_of_maps(a,20)
-# c = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(length_scale), fixed=True)
-# d = interpolate_unknown_points_of_a_map_of_maps_of_points(b,a, RBF(1) )
+# a = create_points_with_spatially_correlated_pollution_2d(10, 100, length_scale, 1, 10)
+# b = pick_uniform_random_points_on_map_of_maps(a, 20)
+# c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
+# d = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(1))
 # print()
 
 
