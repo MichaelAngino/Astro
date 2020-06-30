@@ -238,7 +238,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # prediction_list.extend(wanted_point_positions)
     # return gp.predict(prediction_list)[len(known_points):]  # predicts on new data
 
-    return (gp.predict(wanted_point_positions), gp.kernel_.length_scale)
+    return gp.predict(wanted_point_positions), gp.kernel_.length_scale
 
 
 def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False):
@@ -270,7 +270,7 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
         interpolated_map[unknown_labels[i]] = all_points.get(unknown_labels[i]).copy()
         interpolated_map[unknown_labels[i]].set_pollution_value(interpolated_pollution_values[i])
 
-    return (interpolated_map, length_scale)
+    return interpolated_map, length_scale
 
 
 def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False):
@@ -478,23 +478,25 @@ def see_what_its_doing_1d():
     plt.show()
 
 
-def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean, pick_number,
-                                                     number_of_maps):
+def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, length_addition, side_length, mean, pick_number,
+                                                     number_of_maps, standard_deviation):
     """
     Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses linearly)  in 2D. Uses uniform point selection and RBF kernel
     :param bottom_bound: bottom bound of length scale
     :param top_bound: top bound of length scale not inclusive
+    :param length_addition: increases the length_scale by length_addition each iteration
     :param side_length: number of points on one side of the square of points
     :param mean: Mean pollution value to be set
     :param pick_number: the Beta (the number of points to select to be measured)
     :param number_of_maps: Number of trials for each length scale
+    :param standard_deviation: Standard deviation in the pollution data
     :return:
     """
     not_cheating_data = []
     cheating_data = []
-    for length_scale in range(bottom_bound, top_bound):  # runs through each length scale
+    for length_scale in range(bottom_bound, top_bound, length_addition):  # runs through each length scale
         points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, length_scale,
-                                                                      number_of_maps)  # Creates all points
+                                                                      number_of_maps, standard_deviation)  # Creates all points
         picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)  # Picks points to be measured
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     # Interpolates using noncheating method
@@ -513,7 +515,8 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
             average_rmse_of_maps(interpolated_points))  # adds average rmse of all the trials for the cheating method
         # print(length_scale)
 
-    plot_numbers(range(bottom_bound, top_bound, ), not_cheating_data, range(bottom_bound, top_bound), cheating_data,
+    plot_numbers(range(bottom_bound, top_bound, length_addition), not_cheating_data,
+                 range(bottom_bound, top_bound, length_addition), cheating_data,
                  # Plots the data: Red is not cheating, Green Cheating
                  "Length Scale", "RMSE")
 
@@ -528,6 +531,7 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
     :param mean: Mean pollution value to be set
     :param pick_number: the Beta (the number of points to select to be measured)
     :param number_of_maps: Number of trials for each length scale
+    :param standard_deviation: Standard deviation in the pollution data
     :return:
     """
     not_cheating_data = []
@@ -674,7 +678,9 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename):
 
 
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-# run_experiment_with_various_length_scales_linear(50,500,10,100,20,2)
+run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=300, length_addition=5,
+                                                 side_length=10, mean=100, pick_number=20,
+                                                 number_of_maps=2, standard_deviation=10)
 
 
 # see_what_its_doing_2d(100, False)
