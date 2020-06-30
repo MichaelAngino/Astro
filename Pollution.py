@@ -710,7 +710,7 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
     
     
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-run_experiment_with_various_length_scales_linear(10,100,10,10000,5,20,100,5)
+run_experiment_with_various_length_scales_linear(10,100,10,1000,5,20,100,5)
 
 
 
