@@ -83,14 +83,14 @@ class Point:
         """
         return [self.x, self.y]
 
-    def read_pollution_value(self):
+    def read_pollution_value(self, mean, standard_deviation):
         """
         Generates pollution value using actual pollution value. Currently it just assigns pollution value = actual_polution_value
         :return: Nothing
         """
         if not math.isnan(self.pollution_value):
             raise Exception("Just tried to read a pollution value from a point with a assigned pollution_value")
-        self.pollution_value = self.actual_pollution_value
+        self.pollution_value = self.actual_pollution_value + np.random.normal(mean, standard_deviation)
 
     def copy(self):
         """
@@ -195,9 +195,7 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, stan
         for j in range(side_length * side_length):
             pollution_maps[i][j].set_actual_pollution(maps_of_pollution_values[i][j])
 
-    changed_pollution_maps = create_points_with_gaussian_noise(pollution_maps, mean, standard_deviation)
-
-    return changed_pollution_maps
+    return pollution_maps
 
 
 def create_covariance_matrix(points, length_scale, standard_deviation):
@@ -218,21 +216,6 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
                     -np.power(distance(points[i], points[j]), 2) / (2 * length_scale * length_scale)))
 
     return covariance
-
-
-def create_points_with_gaussian_noise(points, mean, standard_deviation):
-    """
-    :param points: matrix of 100 different samples of 100 points
-    :param mean: the mean for numpy.random.normal
-    :param standard_deviation: standard deviation for numpy.random.normal
-    :return: a new matrix with edited pollution values
-    """
-    for i in range(len(points)):
-        for j in range(len(points[0])):
-            points[i][j].set_pollution_value(
-                points[i][j].get_actual_pollution_value() + np.random.normal(mean, standard_deviation))
-
-    return points
 
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
@@ -321,26 +304,30 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
     return interpolated_maps
 
 
-def pick_uniform_random_points_on_map_of_maps(points, pick_number):
+def pick_uniform_random_points_on_map_of_maps(points, pick_number, mean, standard_deviation):
     """
         Picks a number of points from a list of points using a uniform random distribution for each map in a map
         :param points: Map of all the points {label: point}
         :param pick_number: Number of points to pick
+        :param mean: mean pollution value
+        :param standard_deviation: standard deviation of pollution data
         :return: A new map with the picked points {label: point}
         """
 
     new_map = {}
     for label in points.keys():
-        new_map[label] = pick_uniform_random_points(points[label], pick_number)
+        new_map[label] = pick_uniform_random_points(points[label], pick_number, mean, standard_deviation)
 
     return new_map
 
 
-def pick_uniform_random_points(points, pick_number):
+def pick_uniform_random_points(points, pick_number, mean, standard_deviation):
     """
     Picks a number of points from a list of points using a uniform random distribution
     :param points: Map of all the points {label: point}
     :param pick_number: Number of points to pick
+    :param mean: mean pollution value
+    :param standard_deviation: standard deviation of pollution data
     :return: A new map with the picked points {label: point}
     """
     random = np.random.default_rng()
@@ -355,7 +342,7 @@ def pick_uniform_random_points(points, pick_number):
     for i in random_picks:  # assigns and copies picked points into a new dictionary
         new_map[i] = Point(i, points.get(i).get_actual_pollution_value(), points.get(i).get_x_cord(),
                            points.get(i).get_y_cord())
-        new_map.get(i).read_pollution_value()
+        new_map.get(i).read_pollution_value(mean, standard_deviation)
 
     return new_map
 
@@ -558,7 +545,7 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
     for length_scale in range(bottom_bound, top_bound, step):  # runs through each length scale
         points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std, length_scale,
                                                                       number_of_maps)  # Creates all points
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)  # Picks points to be measured
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number, 0, std)  # Picks points to be measured
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     # Interpolates using noncheating method
                                                                                     RBF(np.random.randint(1e-05,
@@ -601,7 +588,7 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
     while length_scale <= top_bound:  # runs through each length scale
         points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std, length_scale,
                                                                       number_of_maps)  # Creates all points
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)  # Picks points to be measured
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number, 0, std)  # Picks points to be measured
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     # Interpolates using noncheating method
                                                                                     RBF(np.random.randint(1e-05,
@@ -649,7 +636,7 @@ def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, step
             points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_deviation_values[i],
                                                                           length_scale_list[j], num_maps)
             picked_points = pick_uniform_random_points_on_map_of_maps(points,
-                                                                      pick_number)  # Picks points to be measured
+                                                                      pick_number, 0, std_deviation_values[i])  # Picks points to be measured
             interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                         RBF(length_scale_list[j],
                                                                                             ),
