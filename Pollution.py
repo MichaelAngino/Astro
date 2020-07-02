@@ -56,7 +56,6 @@ class Point:
         """
         self.pollution_value = new_pollution_value
 
-
     def set_actual_pollution(self, new_actual_pollution_value):
         """
         Should rarely be used changes the true value of the pollution at a point
@@ -196,7 +195,9 @@ def create_points_with_spatially_correlated_pollution_2d(side_length, mean, stan
         for j in range(side_length * side_length):
             pollution_maps[i][j].set_actual_pollution(maps_of_pollution_values[i][j])
 
-    return pollution_maps
+    changed_pollution_maps = create_points_with_gaussian_noise(pollution_maps, mean, standard_deviation)
+
+    return changed_pollution_maps
 
 
 def create_covariance_matrix(points, length_scale, standard_deviation):
@@ -219,6 +220,21 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
     return covariance
 
 
+def create_points_with_gaussian_noise(points, mean, standard_deviation):
+    """
+    :param points: matrix of 100 different samples of 100 points
+    :param mean: the mean for numpy.random.normal
+    :param standard_deviation: standard deviation for numpy.random.normal
+    :return: a new matrix with edited pollution values
+    """
+    for i in range(len(points)):
+        for j in range(len(points[0])):
+            points[i][j].set_pollution_value(
+                points[i][j].get_actual_pollution_value() + np.random.normal(mean, standard_deviation))
+
+    return points
+
+
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False):
     """
@@ -237,7 +253,8 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
         gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
+        gp = GaussianProcessRegressor(kernel,
+                                      n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -388,7 +405,7 @@ def root_mean_square_error(points):
     :return: The RMSE of the pollution values found through interpolation
     """
 
-    normalized = False #allows manual change from normalized rmse and normal rmse
+    normalized = False  # allows manual change from normalized rmse and normal rmse
 
     if not normalized:
         sum = 0
@@ -405,7 +422,6 @@ def root_mean_square_error(points):
         rmse = math.sqrt(sum / len(points))
         mean /= len(points.values())
         return rmse / mean
-
 
 
 def average_rmse_of_maps(maps_of_points):
@@ -433,6 +449,23 @@ def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_sca
 
     plt.show()
 
+
+def plot_varied_std_deviations(length_scale_list, std_deviations, x_label, y_label):
+    """
+    Plots RMSE vs Length Scale of pollution points with various standard deviations
+    :param length_scale_list: list of used length scales on x-axis
+    :param std_deviations: list of various standard deviations
+    :param x_label: label for x-axis of graph
+    :param y_label: label for y-axis of graph
+    :return:
+    """
+
+    plt.plot(length_scale_list, std_deviations[0], "ro",
+             length_scale_list, std_deviations[1], "go", length_scale_list, std_deviations[2], "bo")
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+
+    plt.show()
 
 def run_interpolations_with_random_betas_1d():
     """
@@ -506,7 +539,8 @@ def see_what_its_doing_1d():
     plt.show()
 
 
-def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean,std, pick_number, number_of_maps, step):
+def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean, std, pick_number,
+                                                     number_of_maps, step):
     """
     Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses linearly)  in 2D. Uses uniform point selection and RBF kernel
     :param step: step
@@ -521,11 +555,15 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
     """
     not_cheating_data = []
     cheating_data = []
-    for length_scale in range(bottom_bound,top_bound,step): #runs through each length scale
-        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,std,length_scale, number_of_maps) # Creates all points
-        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number) # Picks points to be measured
-        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
-                               RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
+    for length_scale in range(bottom_bound, top_bound, step):  # runs through each length scale
+        points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std, length_scale,
+                                                                      number_of_maps)  # Creates all points
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)  # Picks points to be measured
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                    # Interpolates using noncheating method
+                                                                                    RBF(np.random.randint(1e-05,
+                                                                                                          100 + 1)),
+                                                                                    fixed=False)
 
         not_cheating_data.append(
             average_rmse_of_maps(interpolated_points))  # adds average rms of all the trials for the noncheating method
@@ -538,11 +576,13 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
             average_rmse_of_maps(interpolated_points))  # adds average rmse of all the trials for the cheating method
         # print(length_scale)
 
-
-    plot_numbers(range(bottom_bound, top_bound, step), not_cheating_data, range(bottom_bound, top_bound,step), cheating_data, #Plots the data Red is not cheating, Green Cheating
+    plot_numbers(range(bottom_bound, top_bound, step), not_cheating_data, range(bottom_bound, top_bound, step),
+                 cheating_data,  # Plots the data Red is not cheating, Green Cheating
                  "Length Scale", "RMSE")
 
-def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_length, mean,std, pick_number, number_of_maps):
+
+def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_length, mean, std, pick_number,
+                                                  number_of_maps):
     """
     Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses by powers of 10)  in 2D. Uses uniform point selection and RBF kernel
     :param bottom_bound: bottom bound of length scale
@@ -558,11 +598,15 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
     cheating_data = []
     length_scale = bottom_bound
     length_scale_list = []
-    while length_scale <= top_bound: #runs through each length scale
-        points = create_points_with_spatially_correlated_pollution_2d(side_length,mean,std, length_scale, number_of_maps) # Creates all points
-        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number) # Picks points to be measured
-        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
-                               RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
+    while length_scale <= top_bound:  # runs through each length scale
+        points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std, length_scale,
+                                                                      number_of_maps)  # Creates all points
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number)  # Picks points to be measured
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                    # Interpolates using noncheating method
+                                                                                    RBF(np.random.randint(1e-05,
+                                                                                                          100 + 1)),
+                                                                                    fixed=False)
 
         not_cheating_data.append(
             average_rmse_of_maps(interpolated_points))  # adds average rms of all the trials for the noncheating method
@@ -581,6 +625,56 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
                  "Length Scale", "RMSE", x_log_scale=True)
 
 
+def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, steps, side_length, mean,
+                                                   std_deviation_values, pick_number, num_maps):
+    """
+    Experiment to see relation between RMSE and cheating regression data when varying the standard_deviation of pollution values
+    :param bottom_bound: lower bound of length scale
+    :param top_bound: top bound of length scale
+    :param steps: difference between each adjacent length scale
+    :param side_length: number of points on one side of the square of points
+    :param mean: mean pollution value
+    :param std_deviation_values: list of various standard deviations to be used and plotted
+    :param pick_number: number of selected known points
+    :param num_maps: number of maps used in the averaging process
+    :return:
+    """
+
+    data_with_varied_std_deviations = []
+    length_scale_list = list_of_length_scales(bottom_bound, top_bound, steps)
+
+    for i in range(len(std_deviation_values)):
+        cheating_data = []
+        for j in range(len(length_scale_list)):
+            points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_deviation_values[i],
+                                                                          length_scale_list[j], num_maps)
+            picked_points = pick_uniform_random_points_on_map_of_maps(points,
+                                                                      pick_number)  # Picks points to be measured
+            interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                        RBF(length_scale_list[j],
+                                                                                            ),
+                                                                                        fixed=True)  # cheating method
+            cheating_data.append(average_rmse_of_maps(interpolated_points))
+
+        data_with_varied_std_deviations.append(cheating_data)
+
+    plot_varied_std_deviations(length_scale_list, data_with_varied_std_deviations, "Length Scale", "RMSE")
+
+
+def list_of_length_scales(bottom_bound, top_bound, steps):
+    """
+    Creates an array of used length scales during the graphing process
+    :param bottom_bound: lower bound of length scale
+    :param top_bound: upper bound of length scale
+    :param steps: difference between each adjacent length scale
+    :return: a list of various length scales
+    """
+    length_scales = []
+    for i in range(bottom_bound, top_bound, steps):
+        length_scales.append(i)
+    return length_scales
+
+
 def see_what_its_doing_2d(length_scale, fixed):
     """
     3D graphs the pollution value of the measured and interpolated pollution values
@@ -589,9 +683,7 @@ def see_what_its_doing_2d(length_scale, fixed):
     :return:
     """
 
-
-
-    a = create_points_with_spatially_correlated_pollution_2d(10, 100,10, length_scale, 1)
+    a = create_points_with_spatially_correlated_pollution_2d(10, 100, 10, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
     if fixed:
         c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
@@ -616,21 +708,20 @@ def see_what_its_doing_2d(length_scale, fixed):
             y2.append(point.get_y_cord())
             z2.append(point.get_pollution_value())
     print(average_rmse_of_maps(c))
-    plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,"Rotating Graph.gif")
-
+    plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, "Rotating Graph.gif")
 
     # mywriter = animation.FFMpegWriter(fps=60)
     # rot_animation.save("rotation.mp4",dpi = 80, writer= mywriter)
 
 
-def see_what_its_doing_2d_comparison(length_scale, true_values = False):
+def see_what_its_doing_2d_comparison(length_scale, true_values=False):
     """
     ALlows visual comparison between interpolation with a cheating and not cheating interpolation
     :param length_scale:
     :return:
     """
 
-    a = create_points_with_spatially_correlated_pollution_2d(10, 100,10, length_scale, 1)
+    a = create_points_with_spatially_correlated_pollution_2d(10, 100, 10, length_scale, 1)
     b = pick_uniform_random_points_on_map_of_maps(a, 20)
     c1 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
     c2 = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1, 10000)), fixed=False)
@@ -674,13 +765,16 @@ def see_what_its_doing_2d_comparison(length_scale, true_values = False):
                 y3_true_values.append(point.get_y_cord())
                 z3_true_values.append(point.get_actual_pollution_value())
 
-        plot_numbers_3d_and_save(x3_true_values,y3_true_values,z3_true_values,x2_fixed,y2_fixed,z2_fixed,"True Value Comparison Fixed Graph.gif")
-        plot_numbers_3d_and_save(x3_true_values,y3_true_values,z3_true_values,x2_not_fixed,y2_not_fixed,z2_not_fixed,"True value Not Fixed Graph.gif")
+        plot_numbers_3d_and_save(x3_true_values, y3_true_values, z3_true_values, x2_fixed, y2_fixed, z2_fixed,
+                                 "True Value Comparison Fixed Graph.gif")
+        plot_numbers_3d_and_save(x3_true_values, y3_true_values, z3_true_values, x2_not_fixed, y2_not_fixed,
+                                 z2_not_fixed, "True value Not Fixed Graph.gif")
 
-    plot_numbers_3d_and_save(x1,y1,z1,x2_fixed,y2_fixed,z2_fixed,"Fixed Rotating Graph.gif")
-    plot_numbers_3d_and_save(x1,y1,z1,x2_not_fixed,y2_not_fixed,z2_not_fixed, "Not Fixed Rotating Graph.gif")
+    plot_numbers_3d_and_save(x1, y1, z1, x2_fixed, y2_fixed, z2_fixed, "Fixed Rotating Graph.gif")
+    plot_numbers_3d_and_save(x1, y1, z1, x2_not_fixed, y2_not_fixed, z2_not_fixed, "Not Fixed Rotating Graph.gif")
 
-def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
+
+def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gif"):
     """
     Scatterplot in 3d and saves rotating gif to file
     :param x1:
@@ -708,32 +802,12 @@ def plot_numbers_3d_and_save(x1,y1,z1,x2,y2,z2,filename = "Rotating Graph.gif"):
     print("Finished Save")
 
 
+list_of_std_deviations = [1, 5, 10]
+run_experiment_with_varied_standard_deviations(10, 100, 1, 10, 100, list_of_std_deviations, 20, 100)
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=300, length_addition=5,
-                                                 side_length=10, mean=100, pick_number=20,
-                                                 number_of_maps=2, standard_deviation=10)
-
-
+# run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=200, step=5,
+#                                                side_length=10, mean=100, pick_number=20,
+#                                                number_of_maps=100, std=10)
 
 # see_what_its_doing_2d(100, True)
 # see_what_its_doing_2d_comparison(10,True)
-
-# length_scale = 100
-# a = create_points_with_spatially_correlated_pollution_2d(10, 100, length_scale, 1, 10)
-# b = pick_uniform_random_points_on_map_of_maps(a, 20)
-# c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
-# d = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(1))
-# print()
-
-
-#
-#
-# random_points1 = create_points_with_random_pollution(10, 100, 10)
-# p = pick_uniform_random_points(random_points1,5)
-#
-# a = interpolate_unknown_points(p,random_points1)
-# test_pollution_maps = create_points_with_spatially_correlated_pollution_2d(10, 100, 1, 2)
-# for i in range(len(test_pollution_maps)):
-#    for j in range(len(test_pollution_maps[0])):
-#       print(test_pollution_maps[i][j], end=' ')
-#    print()
