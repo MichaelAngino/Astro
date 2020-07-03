@@ -54,6 +54,8 @@ class Point:
         :param new_pollution_value: New pollution value to be set
         :return: Nothing
         """
+        # if new_pollution_value < 0:
+        #     print("SET_POLLUTION_ALERT: set pollution value to a negative value")
         self.pollution_value = new_pollution_value
 
     def set_actual_pollution(self, new_actual_pollution_value):
@@ -83,14 +85,14 @@ class Point:
         """
         return [self.x, self.y]
 
-    def read_pollution_value(self, mean, standard_deviation):
+    def read_pollution_value(self,  standard_deviation):
         """
         Generates pollution value using actual pollution value. Currently it just assigns pollution value = actual_polution_value
         :return: Nothing
         """
         if not math.isnan(self.pollution_value):
             raise Exception("Just tried to read a pollution value from a point with a assigned pollution_value")
-        self.pollution_value = self.actual_pollution_value + np.random.normal(mean, standard_deviation)
+        self.pollution_value = self.actual_pollution_value + np.random.normal(0, standard_deviation)
 
     def copy(self):
         """
@@ -342,7 +344,7 @@ def pick_uniform_random_points(points, pick_number, mean, standard_deviation):
     for i in random_picks:  # assigns and copies picked points into a new dictionary
         new_map[i] = Point(i, points.get(i).get_actual_pollution_value(), points.get(i).get_x_cord(),
                            points.get(i).get_y_cord())
-        new_map.get(i).read_pollution_value(mean, standard_deviation)
+        new_map.get(i).read_pollution_value(standard_deviation)
 
     return new_map
 
@@ -392,7 +394,7 @@ def root_mean_square_error(points):
     :return: The RMSE of the pollution values found through interpolation
     """
 
-    normalized = False  # allows manual change from normalized rmse and normal rmse
+    normalized = True  # allows manual change from normalized rmse and normal rmse
 
     if not normalized:
         sum = 0
@@ -405,7 +407,7 @@ def root_mean_square_error(points):
         mean = 0
         for point in points.values():
             sum += pow(point.get_pollution_value() - point.get_actual_pollution_value(), 2)
-            mean += point.get_actual_pollution_value()
+            mean += abs(point.get_actual_pollution_value())
         rmse = math.sqrt(sum / len(points))
         mean /= len(points.values())
         return rmse / mean
@@ -526,8 +528,7 @@ def see_what_its_doing_1d():
     plt.show()
 
 
-def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean, std, pick_number,
-                                                     number_of_maps, step):
+def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, side_length, mean, standard_deviation, pick_number, number_of_maps, step):
     """
     Experiment to see rmse of cheating and not cheating regreassion on varous length scales (traverses linearly)  in 2D. Uses uniform point selection and RBF kernel
     :param step: step
@@ -535,22 +536,18 @@ def run_experiment_with_various_length_scales_linear(bottom_bound, top_bound, si
     :param top_bound: top bound of length scale not inclusive
     :param side_length: number of points on one side of the square of points
     :param mean: Mean pollution value to be set
-    :param std: Standard Deviation
+    :param standard_deviation: Standard Deviation
     :param pick_number: the Beta (the number of points to select to be measured)
     :param number_of_maps: Number of trials for each length scale
     :return:
     """
     not_cheating_data = []
     cheating_data = []
-    for length_scale in range(bottom_bound, top_bound, step):  # runs through each length scale
-        points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std, length_scale,
-                                                                      number_of_maps)  # Creates all points
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, pick_number, 0, std)  # Picks points to be measured
-        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
-                                                                                    # Interpolates using noncheating method
-                                                                                    RBF(np.random.randint(1e-05,
-                                                                                                          100 + 1)),
-                                                                                    fixed=False)
+    for length_scale in range(bottom_bound,top_bound,step): #runs through each length scale
+        points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, standard_deviation, length_scale, number_of_maps) # Creates all points
+        picked_points = pick_uniform_random_points_on_map_of_maps(points,pick_number) # Picks points to be measured
+        interpolated_points  = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points, # Interpolates using noncheating method
+                               RBF(np.random.randint(1e-05, 100 + 1)), fixed=False)
 
         not_cheating_data.append(
             average_rmse_of_maps(interpolated_points))  # adds average rms of all the trials for the noncheating method
@@ -612,8 +609,8 @@ def run_experiment_with_various_length_scales_log(bottom_bound, top_bound, side_
                  "Length Scale", "RMSE", x_log_scale=True)
 
 
-def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, steps, side_length, mean,
-                                                   std_deviation_values, pick_number, num_maps):
+def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, steps, side_length, mean, std_of_pollution,
+                                                   std_deviation_values_of_measurment, pick_number, num_maps):
     """
     Experiment to see relation between RMSE and cheating regression data when varying the standard_deviation of pollution values
     :param bottom_bound: lower bound of length scale
@@ -621,7 +618,7 @@ def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, step
     :param steps: difference between each adjacent length scale
     :param side_length: number of points on one side of the square of points
     :param mean: mean pollution value
-    :param std_deviation_values: list of various standard deviations to be used and plotted
+    :param std_deviation_values_of_measurment: list of various standard deviations to be used and plotted
     :param pick_number: number of selected known points
     :param num_maps: number of maps used in the averaging process
     :return:
@@ -630,19 +627,23 @@ def run_experiment_with_varied_standard_deviations(bottom_bound, top_bound, step
     data_with_varied_std_deviations = []
     length_scale_list = list_of_length_scales(bottom_bound, top_bound, steps)
 
-    for i in range(len(std_deviation_values)):
+    for i in range(len(std_deviation_values_of_measurment)):
         cheating_data = []
         for j in range(len(length_scale_list)):
-            points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_deviation_values[i],
+            points = create_points_with_spatially_correlated_pollution_2d(side_length, mean, std_of_pollution,
                                                                           length_scale_list[j], num_maps)
             picked_points = pick_uniform_random_points_on_map_of_maps(points,
-                                                                      pick_number, 0, std_deviation_values[i])  # Picks points to be measured
+                                                                      pick_number, 0, std_deviation_values_of_measurment[i])  # Picks points to be measured
             interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                         RBF(length_scale_list[j],
                                                                                             ),
                                                                                         fixed=True)  # cheating method
             cheating_data.append(average_rmse_of_maps(interpolated_points))
+            print("LengthScale: ", length_scale_list[j], " finished")
 
+
+
+        print("Standard Deviation: ",  i, " finished")
         data_with_varied_std_deviations.append(cheating_data)
 
     plot_varied_std_deviations(length_scale_list, data_with_varied_std_deviations, "Length Scale", "RMSE")
@@ -662,17 +663,20 @@ def list_of_length_scales(bottom_bound, top_bound, steps):
     return length_scales
 
 
-def see_what_its_doing_2d(length_scale, fixed):
+def see_what_its_doing_2d(length_scale, cheating, pollution_mean, pollution_std, pick_number ):
     """
     3D graphs the pollution value of the measured and interpolated pollution values
+    :param pick_number:
+    :param pollution_std:
+    :param pollution_mean:
     :param length_scale:
-    :param fixed:
+    :param cheating:
     :return:
     """
 
     a = create_points_with_spatially_correlated_pollution_2d(10, 100, 10, length_scale, 1)
-    b = pick_uniform_random_points_on_map_of_maps(a, 20)
-    if fixed:
+    b = pick_uniform_random_points_on_map_of_maps(a, pick_number, pollution_mean, pollution_std)
+    if cheating:
         c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(length_scale), fixed=True)
     else:
         c = interpolate_unknown_points_of_a_map_of_maps_of_points(b, a, RBF(np.random.randint(1, 10000)), fixed=False)
@@ -790,11 +794,15 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
 
 
 list_of_std_deviations = [1, 5, 10]
-run_experiment_with_varied_standard_deviations(10, 100, 1, 10, 100, list_of_std_deviations, 20, 100)
-# run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
-# run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=200, step=5,
-#                                                side_length=10, mean=100, pick_number=20,
-#                                                number_of_maps=100, std=10)
+# run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
+#                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 50, num_maps= 100)
 
-# see_what_its_doing_2d(100, True)
+# run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
+# run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=100, step =5,
+#                                                  side_length=10, mean=100, pick_number=20,
+#                                                  number_of_maps=100, standard_deviation=10)
+
+
+
+see_what_its_doing_2d(length_scale=20,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 40)
 # see_what_its_doing_2d_comparison(10,True)
