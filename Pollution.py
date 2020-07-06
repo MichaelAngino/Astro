@@ -235,10 +235,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
     if fixed:
-        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10, alpha= .01,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel,
+        gp = GaussianProcessRegressor(kernel, alpha = .01,
                                       n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
@@ -794,8 +794,8 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
 
 
 list_of_std_deviations = [1, 5, 10]
-# run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
-#                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 50, num_maps= 100)
+run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
+                                               std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
 
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=100, step =5,
@@ -804,5 +804,5 @@ list_of_std_deviations = [1, 5, 10]
 
 
 
-see_what_its_doing_2d(length_scale=20,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 40)
+# see_what_its_doing_2d(length_scale=40,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 50)
 # see_what_its_doing_2d_comparison(10,True)
