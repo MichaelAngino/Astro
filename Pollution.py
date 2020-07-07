@@ -10,6 +10,7 @@ import numpy as np
 import sys
 from scipy.special import erfcinv as erfcinv
 import tqdm as tqdm
+import gauss_func
 import time
 
 
@@ -226,7 +227,7 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
 
     return covariance
 
-def create_pollution_using_gaussian_atmospheric_dispersion_model():
+def gaussian_atmospheric_dispersion_model(source_x, source_y):
     # SECTION 0: Definitions (normally don't modify this section)
     # view
     PLAN_VIEW = 1;
@@ -285,8 +286,9 @@ def create_pollution_using_gaussian_atmospheric_dispersion_model():
 
     wind = PREVAILING_WIND;
     stacks = ONE_STACK;
-    stack_x = [0., 1000., -200.];
-    stack_y = [0., 250., -500.];
+    # only using one pollution source point (one stack)
+    stack_x = [source_x]
+    stack_y = [source_y]
 
     Q = [40., 40., 40.];  # mass emitted per unit time
     H = [50., 50., 50.];  # stack height, m
@@ -358,6 +360,24 @@ def create_pollution_using_gaussian_atmospheric_dispersion_model():
             C1[:, :, i] = C1[:, :, i] + C;
 
     return np.mean(C1, axis=2) * 1e6
+
+
+def create_points_using_atmospheric_model(x_source, y_source, side_length):
+    pollution_values = gaussian_atmospheric_dispersion_model(x_source, y_source)
+
+    point_map = {}
+    x = 0
+    label_index = 0
+    for i in range(0, side_length):
+        y = 0
+        for j in range(0, side_length):
+            point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+            label_index += 1
+            y += 1
+        x += 1
+
+    return point_map
+
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False):
@@ -931,7 +951,7 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
     rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
 
-def graph_pollution_using_heat_map(data, title):
+def graph_pollution_using_heat_map(data, title, x, y):
     plt.figure()
     plt.ion()
 

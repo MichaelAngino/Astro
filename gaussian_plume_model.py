@@ -7,6 +7,7 @@
 # POLLUTANTS FROM POINT SOURCES                                           #
 ###########################################################################
 
+
 import numpy as np
 import sys
 from scipy.special import erfcinv as erfcinv
@@ -17,6 +18,7 @@ from gauss_func import gauss_func
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
+
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
 #rc('font',**{'family':'serif','serif':['Palatino']})
@@ -100,7 +102,7 @@ x_slice=26; # position (1-50) to take the slice in the x-direction
 y_slice=1;  # position (1-50) to plot concentrations vs time
 
 wind=PREVAILING_WIND;
-stacks=ONE_STACK;
+stacks=THREE_STACKS;
 stack_x=[0., 1000., -200.];
 stack_y=[0., 250., -500.];
 
