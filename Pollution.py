@@ -371,7 +371,11 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
     x = 0
     label_index = 0
     for map in range(0, number_of_maps):
-        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list, y_source_list)
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0])
+
+        for i in range(1,len(x_source_list)):
+            pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i])
+
         point_map = {}
         for i in range(0, side_length):
             y = 0
@@ -694,6 +698,6 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 #  Playing around with gaussian disperssion stuff
 
-points = create_points_using_atmospheric_model(25, 25, 50, 1)
+points = create_points_using_atmospheric_model([10,30], [10,30], 50, 1)
 b= pick_uniform_random_points_on_map_of_maps(points,2500,0)
 graph_pollution_using_heat_map(b[0], "title",side_length = 50)
