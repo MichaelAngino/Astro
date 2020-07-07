@@ -100,7 +100,7 @@ x_slice=26; # position (1-50) to take the slice in the x-direction
 y_slice=1;  # position (1-50) to plot concentrations vs time
 
 wind=PREVAILING_WIND;
-stacks=ONE_STACK;
+stacks=THREE_STACKS;
 stack_x=[0., 1000., -200.];
 stack_y=[0., 250., -500.];
 
@@ -204,7 +204,7 @@ else:
 if output == PLAN_VIEW:
    plt.figure()
    plt.ion()
-   
+
    plt.pcolor(x,y,np.mean(C1,axis=2)*1e6, cmap='jet');
    plt.clim((0, 1e2));
    plt.title(stability_str + '\n' + wind_dir_str);

@@ -931,17 +931,24 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
     rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
 
-def graph_pollution_using_heat_map(data, title):
+def graph_pollution_using_heat_map(points, title):
     plt.figure()
     plt.ion()
 
-    plt.pcolor(x, y, np.mean(data, axis=2) * 1e6, cmap='jet');
-    plt.clim((0, 1e2));
-    plt.title(title);
-    plt.xlabel('x (metres)');
-    plt.ylabel('y (metres)');
-    cb1 = plt.colorbar();
-    cb1.set_label('$\mu$ g m$^{-3}$');
+    x,y, pollution = [],[],[]
+
+    for label,point in points.items():
+        x.append(point.get_x_cord())
+        y.append(point.get_y_cord())
+        pollution.append(point.get_pollution_value)
+
+    plt.pcolor(x, y, pollution, cmap='jet')
+    plt.clim((0, max(pollution)))
+    plt.title(title)
+    plt.xlabel('x (metres)')
+    plt.ylabel('y (metres)')
+    cb1 = plt.colorbar()
+    cb1.set_label('$\mu$ g m$^{-3}$')
     plt.show()
 
 
