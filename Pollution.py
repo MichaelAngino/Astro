@@ -1019,7 +1019,7 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 #  Playing around with gaussian disperssion stuff
 
-points = create_points_using_atmospheric_model(5, 5, 10)
-b= pick_uniform_random_points(points,100,1)
-graph_pollution_using_heat_map(b, "title",
+points = create_points_using_atmospheric_model(50, 50, 100, 1)
+b= pick_uniform_random_points_on_map_of_maps(points,100,1)
+graph_pollution_using_heat_map(b[0], "title",
 side_length = 10)
