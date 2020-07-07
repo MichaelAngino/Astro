@@ -236,6 +236,8 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y):
     ONE_STACK = 1
     TWO_STACKS = 2
     THREE_STACKS = 3
+    # FOUR_STACKS = 4
+    # FIVE_STACKS = 5
 
     # stability of the atmosphere
     CONSTANT_STABILITY = 1
@@ -279,8 +281,8 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y):
     wind = PREVAILING_WIND
     stacks = ONE_STACK
     # only using one pollution source point (one stack)
-    stack_x = [source_x,0,0]
-    stack_y = [source_y,0,0]
+    stack_x = [source_x, 0., 0., 50., 50.]
+    stack_y = [source_y, 0., 50., 0., 50.]
 
     Q = [40., 40., 40.]  # mass emitted per unit time
     H = [50., 50., 50.]  # stack height, m
