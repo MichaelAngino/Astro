@@ -235,10 +235,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     # kernel = RBF(10, (1e-2, 1e2)) * C(1)
 
     if fixed:
-        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10, alpha= .01,
+        gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
                                       optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
-        gp = GaussianProcessRegressor(kernel, alpha = .01,
+        gp = GaussianProcessRegressor(kernel,
                                       n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
@@ -806,3 +806,7 @@ run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, s
 
 # see_what_its_doing_2d(length_scale=40,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 50)
 # see_what_its_doing_2d_comparison(10,True)
+
+
+#  Playing around with gaussian disperssion stuff
+
