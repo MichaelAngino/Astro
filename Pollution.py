@@ -228,123 +228,129 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
     return covariance
 
 def gaussian_atmospheric_dispersion_model(source_x, source_y):
+    """
+    Creates a model of realistic pollution values given a source point
+    :param source_x: x-coordinate of source point
+    :param source_y: y-coordinate of source point
+    :return: matrix of realistic pollution values
+    """
     # SECTION 0: Definitions (normally don't modify this section)
     # view
-    PLAN_VIEW = 1;
-    HEIGHT_SLICE = 2;
-    SURFACE_TIME = 3;
-    NO_PLOT = 4;
+    PLAN_VIEW = 1
+    HEIGHT_SLICE = 2
+    SURFACE_TIME = 3
+    NO_PLOT = 4
 
     # wind field
-    CONSTANT_WIND = 1;
-    FLUCTUATING_WIND = 2;
-    PREVAILING_WIND = 3;
+    CONSTANT_WIND = 1
+    FLUCTUATING_WIND = 2
+    PREVAILING_WIND = 3
 
     # number of stacks
-    ONE_STACK = 1;
-    TWO_STACKS = 2;
-    THREE_STACKS = 3;
+    ONE_STACK = 1
+    TWO_STACKS = 2
+    THREE_STACKS = 3
 
     # stability of the atmosphere
-    CONSTANT_STABILITY = 1;
-    ANNUAL_CYCLE = 2;
+    CONSTANT_STABILITY = 1
+    ANNUAL_CYCLE = 2
     stability_str = ['Very unstable', 'Moderately unstable', 'Slightly unstable', \
-                     'Neutral', 'Moderately stable', 'Very stable'];
+                     'Neutral', 'Moderately stable', 'Very stable']
     # Aerosol properties
-    HUMIDIFY = 2;
-    DRY_AEROSOL = 1;
+    HUMIDIFY = 2
+    DRY_AEROSOL = 1
 
-    SODIUM_CHLORIDE = 1;
-    SULPHURIC_ACID = 2;
-    ORGANIC_ACID = 3;
-    AMMONIUM_NITRATE = 4;
-    nu = [2., 2.5, 1., 2.];
-    rho_s = [2160., 1840., 1500., 1725.];
-    Ms = [58.44e-3, 98e-3, 200e-3, 80e-3];
-    Mw = 18e-3;
+    SODIUM_CHLORIDE = 1
+    SULPHURIC_ACID = 2
+    ORGANIC_ACID = 3
+    AMMONIUM_NITRATE = 4
+    nu = [2., 2.5, 1., 2.]
+    rho_s = [2160., 1840., 1500., 1725.]
+    Ms = [58.44e-3, 98e-3, 200e-3, 80e-3]
+    Mw = 18e-3
 
-    dxy = 100;  # resolution of the model in both x and y directions
-    dz = 10;
-    x = np.mgrid[-2500:2500 + dxy:dxy];  # solve on a 5 km domain
-    y = x;  # x-grid is same as y-grid
+    dxy = 100  # resolution of the model in both x and y directions
+    dz = 10
+    x = np.mgrid[-2500:2500 + dxy:dxy]  # solve on a 5 km domain
+    y = x  # x-grid is same as y-grid
     ###########################################################################
 
     # SECTION 1: Configuration
     # Variables can be changed by the user+++++++++++++++++++++++++++++++++++++
-    RH = 0.90;
-    aerosol_type = SODIUM_CHLORIDE;
+    RH = 0.90
+    aerosol_type = SODIUM_CHLORIDE
 
-    dry_size = 60e-9;
-    humidify = DRY_AEROSOL;
+    dry_size = 60e-9
+    humidify = DRY_AEROSOL
 
-    stab1 = 1;  # set from 1-6
-    stability_used = CONSTANT_STABILITY;
+    stab1 = 1  # set from 1-6
+    stability_used = CONSTANT_STABILITY
 
-    output = PLAN_VIEW;
-    x_slice = 26;  # position (1-50) to take the slice in the x-direction
-    y_slice = 1;  # position (1-50) to plot concentrations vs time
+    output = PLAN_VIEW
+    x_slice = 26  # position (1-50) to take the slice in the x-direction
+    y_slice = 1  # position (1-50) to plot concentrations vs time
 
-    wind = PREVAILING_WIND;
-    stacks = ONE_STACK;
+    wind = PREVAILING_WIND
+    stacks = ONE_STACK
     # only using one pollution source point (one stack)
     stack_x = [source_x,0,0]
     stack_y = [source_y,0,0]
 
-    Q = [40., 40., 40.];  # mass emitted per unit time
-    H = [50., 50., 50.];  # stack height, m
-    days = 50;  # run the model for 365 days
+    Q = [40., 40., 40.]  # mass emitted per unit time
+    H = [50., 50., 50.]  # stack height, m
+    days = 50  # run the model for 365 days
     # --------------------------------------------------------------------------
-    times = np.mgrid[1:(days) * 24 + 1:1] / 24.;
+    times = np.mgrid[1:(days) * 24 + 1:1] / 24.
 
-    Dy = 10.;
-    Dz = 10.;
+    Dy = 10.
+    Dz = 10.
 
     # SECTION 2: Act on the configuration information
 
     # Decide which stability profile to use
     if stability_used == CONSTANT_STABILITY:
 
-        stability = stab1 * np.ones((days * 24, 1));
-        stability_str = stability_str[stab1 - 1];
+        stability = stab1 * np.ones((days * 24, 1))
+        stability_str = stability_str[stab1 - 1]
     elif stability_used == ANNUAL_CYCLE:
 
-        stability = np.round(2.5 * np.cos(times * 2. * np.pi / (365.)) + 3.5);
-        stability_str = 'Annual cycle';
+        stability = np.round(2.5 * np.cos(times * 2. * np.pi / (365.)) + 3.5)
+        stability_str = 'Annual cycle'
     else:
         sys.exit()
 
     # decide what kind of run to do, plan view or y-z slice, or time series
     if output == PLAN_VIEW or output == SURFACE_TIME or output == NO_PLOT:
 
-        C1 = np.zeros((len(x), len(y), days * 24));  # array to store data, initialised to be zero
+        C1 = np.zeros((len(x), len(y), days * 24))  # array to store data, initialised to be zero
 
-        [x, y] = np.meshgrid(x, y);  # x and y defined at all positions on the grid
-        z = np.zeros(np.shape(x));  # z is defined to be at ground level.
+        [x, y] = np.meshgrid(x, y)  # x and y defined at all positions on the grid
+        z = np.zeros(np.shape(x))  # z is defined to be at ground level.
     elif output == HEIGHT_SLICE:
-        z = np.mgrid[0:500 + dz:dz];  # z-grid
+        z = np.mgrid[0:500 + dz:dz]  # z-grid
 
-        C1 = np.zeros((len(y), len(z), days * 24));  # array to store data, initialised to be zero
+        C1 = np.zeros((len(y), len(z), days * 24))  # array to store data, initialised to be zero
 
-        [y, z] = np.meshgrid(y, z);  # y and z defined at all positions on the grid
-        x = x[x_slice] * np.ones(np.shape(y));  # x is defined to be x at x_slice
+        [y, z] = np.meshgrid(y, z)  # y and z defined at all positions on the grid
+        x = x[x_slice] * np.ones(np.shape(y))  # x is defined to be x at x_slice
     else:
         sys.exit()
 
     # Set the wind based on input flags++++++++++++++++++++++++++++++++++++++++
-    wind_speed = 5. * np.ones((days * 24, 1));  # m/s
+    wind_speed = 5. * np.ones((days * 24, 1))  # m/s
     if wind == CONSTANT_WIND:
-        wind_dir = 0. * np.ones((days * 24, 1));
-        wind_dir_str = 'Constant wind';
+        wind_dir = 0. * np.ones((days * 24, 1))
+        wind_dir_str = 'Constant wind'
     elif wind == FLUCTUATING_WIND:
-        wind_dir = 360. * np.random.rand(days * 24, 1);
-        wind_dir_str = 'Random wind';
+        wind_dir = 360. * np.random.rand(days * 24, 1)
+        wind_dir_str = 'Random wind'
     elif wind == PREVAILING_WIND:
-        wind_dir = -np.sqrt(2.) * erfcinv(2. * np.random.rand(24 * days, 1)) * 40.;  # norminv(rand(days.*24,1),0,40);
+        wind_dir = -np.sqrt(2.) * erfcinv(2. * np.random.rand(24 * days, 1)) * 40.  # norminv(rand(days.*24,1),0,40)
         # note at this point you can add on the prevailing wind direction, i.e.
-        # wind_dir=wind_dir+200;
+        # wind_dir=wind_dir+200
         wind_dir[np.where(wind_dir >= 360.)] = \
-            np.mod(wind_dir[np.where(wind_dir >= 360)], 360);
-        wind_dir_str = 'Prevailing wind';
+            np.mod(wind_dir[np.where(wind_dir >= 360)], 360)
+        wind_dir_str = 'Prevailing wind'
     else:
         sys.exit()
     # --------------------------------------------------------------------------
@@ -356,27 +362,39 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y):
         for j in range(0, stacks):
             C = np.ones((len(x), len(y)))
             C = gauss_func(Q[j], wind_speed[i], wind_dir[i], x, y, z,
-                           stack_x[j], stack_y[j], H[j], Dy, Dz, stability[i]);
-            C1[:, :, i] = C1[:, :, i] + C;
+                           stack_x[j], stack_y[j], H[j], Dy, Dz, stability[i])
+            C1[:, :, i] = C1[:, :, i] + C
 
     return np.mean(C1, axis=2) * 1e6
 
 
-def create_points_using_atmospheric_model(x_source, y_source, side_length):
-    pollution_values = gaussian_atmospheric_dispersion_model(x_source, y_source)
+def create_points_using_atmospheric_model(x_source, y_source, side_length, number_of_maps):
+    """
+    Returns a matrix of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
+    pollution values given a source point
+    :param x_source: x-coordinate of source point
+    :param y_source: y-coordinate of source point
+    :param side_length: side length of point map square
+    :param number_of_maps: number of different pollution maps used
+    :return:
+    """
+    pollution_maps = []
 
-    point_map = {}
     x = 0
     label_index = 0
-    for i in range(0, side_length):
-        y = 0
-        for j in range(0, side_length):
-            point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
-            label_index += 1
-            y += 1
-        x += 1
+    for map in range(0, number_of_maps):
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source, y_source)
+        point_map = {}
+        for i in range(0, side_length):
+            y = 0
+            for j in range(0, side_length):
+                point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+                label_index += 1
+                y += 1
+            x += 1
+        pollution_maps[map] = point_map
 
-    return point_map
+    return pollution_maps
 
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
