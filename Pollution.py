@@ -482,13 +482,12 @@ def pick_uniform_random_points_on_map_of_maps(points, pick_number, mean, standar
     return new_map
 
 
-def pick_uniform_random_points(points, pick_number, mean, standard_deviation):
+def pick_uniform_random_points(points, pick_number,  standard_deviation):
     """
     Picks a number of points from a list of points using a uniform random distribution
     :param points: Map of all the points {label: point}
     :param pick_number: Number of points to pick
-    :param mean: mean pollution value
-    :param standard_deviation: standard deviation of pollution data
+    :param standard_deviation: standard deviation of measurment of pollution data
     :return: A new map with the picked points {label: point}
     """
     random = np.random.default_rng()
@@ -951,19 +950,30 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
     rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
 
-def graph_pollution_using_heat_map(points, title):
+def graph_pollution_using_heat_map(points, title, side_length):
     plt.figure()
     plt.ion()
 
+
+
     x,y, pollution = [],[],[]
+    max_pollution = 0
 
-    for label,point in points.items():
-        x.append(point.get_x_cord())
-        y.append(point.get_y_cord())
-        pollution.append(point.get_pollution_value)
+    for i in range(0,side_length):
+        pollution.append([])
+        for j in range(0,side_length):
+            pollution[i].append(0)
 
-    plt.pcolor(x, y, pollution, cmap='jet')
-    plt.clim((0, max(pollution)))
+    for label, point in points.items():
+        pollution[point.get_x_cord()][ point.get_y_cord()] = point.get_pollution_value()
+        if max_pollution < point.get_pollution_value():
+            max_pollution = point.get_pollution_value()
+
+
+
+
+    plt.pcolormesh(pollution, cmap='jet')
+    plt.clim((0, max_pollution))
     plt.title(title)
     plt.xlabel('x (metres)')
     plt.ylabel('y (metres)')
@@ -972,9 +982,11 @@ def graph_pollution_using_heat_map(points, title):
     plt.show()
 
 
-list_of_std_deviations = [1, 5, 10]
-run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
-                                               std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
+# list_of_std_deviations = [1, 5, 10]
+# run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
+#                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
+
+
 
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=100, step =5,
@@ -989,3 +1001,7 @@ run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, s
 
 #  Playing around with gaussian disperssion stuff
 
+points = create_points_using_atmospheric_model(5, 5, 10)
+b= pick_uniform_random_points(points,100,1)
+graph_pollution_using_heat_map(b, "title",
+side_length = 10)
