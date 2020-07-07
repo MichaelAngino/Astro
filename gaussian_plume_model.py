@@ -7,6 +7,7 @@
 # POLLUTANTS FROM POINT SOURCES                                           #
 ###########################################################################
 
+
 import numpy as np
 import sys
 from scipy.special import erfcinv as erfcinv
@@ -17,6 +18,7 @@ from gauss_func import gauss_func
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
+
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
 #rc('font',**{'family':'serif','serif':['Palatino']})
