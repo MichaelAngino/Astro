@@ -368,14 +368,14 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
 
     x = 5
     label_index = 0
-    for map in range(0, number_of_maps):
-        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0], side_length)
+    for map in range(0, number_of_maps): #loops through for each map
 
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0], side_length) #Creates map of all the pollution simulations
         for i in range(1, len(x_source_list)):
             pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i], side_length)
 
         point_map = {}
-        for i in range(0, side_length):
+        for i in range(0, side_length): #assigns pollution values to points
             y = 5
             for j in range(0, side_length):
                 point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
@@ -648,43 +648,51 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
 
 
 def graph_pollution_using_heat_map(points, title, side_length):
+    """
+    Creates HeatMap graph of pollution in 2d
+    :param points: Map of points
+    :param title: Title of graph
+    :param side_length: Side length of points box
+    :return:
+    """
     plt.figure()
     plt.ion()
 
     y, x = np.mgrid[slice(5, (side_length - 1) * 10 + 10, 10),
-                    slice(5, (side_length - 1) * 10 + 10, 10)]
+                    slice(5, (side_length - 1) * 10 + 10, 10)] #create grid for pcolormesh
     pollution = []
     max_pollution = 0
 
-    for i in range(0, side_length):
+    for i in range(0, side_length): #initalizes empty matrix
         pollution.append([])
-
         for j in range(0, side_length):
             pollution[i].append(0)
 
     x_pos = 0
     y_pos = 0
-    for label in range(0, len(points.keys())):
+    for label in range(0, len(points.keys())): #fill matrix with correct pollution data
         pollution[x_pos][y_pos] = points[label].get_pollution_value()
-        if max_pollution < points[label].get_pollution_value():
+        if max_pollution < points[label].get_pollution_value(): #finds max pollution value for coloring
             max_pollution = points[label].get_pollution_value()
         y_pos += 1
         if x_pos == side_length:
-            print("opps error")
+            raise Exception("Error, This should never be true in graph_pollution_using_heat_map")
 
         if y_pos == side_length:
             y_pos = 0
             x_pos += 1
 
-    plt.pcolormesh(x, y, pollution, cmap='jet')
+    plt.pcolormesh(x, y, pollution, cmap='jet') #graphing functions
     plt.clim((0, max_pollution))
     plt.title(title)
     plt.xlabel('x (metres)')
     plt.ylabel('y (metres)')
     cb1 = plt.colorbar()
-    cb1.set_label('$\mu$ g m$^{-3}$')
+    cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
     plt.show()
 
+
+#TEST CODE
 
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
@@ -707,4 +715,4 @@ side_length = 40
 
 points = create_points_using_atmospheric_model([200], [500], side_length, 1)
 b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
-graph_pollution_using_heat_map(b[0], "title", side_length=side_length)
+graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
