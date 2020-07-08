@@ -396,7 +396,7 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
     :param alpha: Alpha for regression ( amount of uncertainty assumed)
-    :return: a list of all predicted pollution values
+    :return: a list of all predicted pollution values t
     """
 
     # kernel = DP(1)
