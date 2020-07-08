@@ -77,9 +77,9 @@ Ms=[58.44e-3, 98e-3, 200e-3, 80e-3];
 Mw=18e-3;
 
 
-dxy=100;          # resolution of the model in both x and y directions
+dxy=10;          # resolution of the model in both x and y directions
 dz=10;
-x=np.mgrid[-2500:2500+dxy:dxy]; # solve on a 5 km domain
+x=np.mgrid[5:95+dxy:dxy]; # solve on a 5 km domain
 y=x;              # x-grid is same as y-grid
 ###########################################################################
 
@@ -102,9 +102,9 @@ x_slice=26; # position (1-50) to take the slice in the x-direction
 y_slice=1;  # position (1-50) to plot concentrations vs time
 
 wind=PREVAILING_WIND;
-stacks=THREE_STACKS;
-stack_x=[0., 1000., -200.];
-stack_y=[0., 250., -500.];
+stacks=ONE_STACK;
+stack_x=[0.,0, 0.];
+stack_y=[1000., 0., 0.];
 
 Q=[40., 40., 40.]; # mass emitted per unit time
 H=[50., 50., 50.]; # stack height, m

@@ -13,7 +13,6 @@ import tqdm as tqdm
 import gauss_func
 import time
 
-
 # test comment
 
 # np.random.multivariate_normal([0, 0], [[1,1], [1,1]] , 1)[0]
@@ -93,7 +92,7 @@ class Point:
         """
         return [self.x, self.y]
 
-    def read_pollution_value(self,  standard_deviation):
+    def read_pollution_value(self, standard_deviation):
         """
         Generates pollution value using actual pollution value. Currently it just assigns pollution value = actual_polution_value
         :return: Nothing
@@ -130,8 +129,6 @@ def copy_dictionary_with_points(points):
 
 def distance(first_point, second_point):
     return math.sqrt(math.pow(first_point.x - second_point.x, 2) + math.pow(first_point.y - second_point.y, 2))
-
-
 
 
 def create_points_with_random_pollution_2d(side_length, mean, std):
@@ -213,7 +210,8 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
 
     return covariance
 
-def gaussian_atmospheric_dispersion_model(source_x, source_y):
+
+def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     """
     Creates a model of realistic pollution values given a source point
     :param source_x: x-coordinate of source point
@@ -257,9 +255,9 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y):
     Ms = [58.44e-3, 98e-3, 200e-3, 80e-3]
     Mw = 18e-3
 
-    dxy = 100  # resolution of the model in both x and y directions
+    dxy = 10  # resolution of the model in both x and y directions
     dz = 10
-    x = np.mgrid[-2500:2500 + dxy:dxy]  # solve on a 5 km domain
+    x = np.mgrid[5:5 + (side_length - 1) * 10 + dxy:dxy]  # solve on a 5 km domain
     y = x  # x-grid is same as y-grid
     ###########################################################################
 
@@ -278,15 +276,15 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y):
     x_slice = 26  # position (1-50) to take the slice in the x-direction
     y_slice = 1  # position (1-50) to plot concentrations vs time
 
-    wind = PREVAILING_WIND
+    wind = CONSTANT_WIND
     stacks = ONE_STACK
     # only using one pollution source point (one stack)
-    stack_x = [source_x, 0., 0., 50., 50.]
-    stack_y = [source_y, 0., 50., 0., 50.]
+    stack_x = [source_x]
+    stack_y = [source_y]
 
-    Q = [40., 40., 40.]  # mass emitted per unit time
-    H = [50., 50., 50.]  # stack height, m
-    days = 50  # run the model for 365 days
+    Q = [10.]  # mass emitted per unit time
+    H = [50.] #[50., 50., 50.]  # stack height, m
+    days = 10  # run the model for 365 days
     # --------------------------------------------------------------------------
     times = np.mgrid[1:(days) * 24 + 1:1] / 24.
 
@@ -368,22 +366,22 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
     """
     pollution_maps = {}
 
-    x = 0
+    x = 5
     label_index = 0
     for map in range(0, number_of_maps):
-        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0])
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0], side_length)
 
-        for i in range(1,len(x_source_list)):
-            pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i])
+        for i in range(1, len(x_source_list)):
+            pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i], side_length)
 
         point_map = {}
         for i in range(0, side_length):
-            y = 0
+            y = 5
             for j in range(0, side_length):
                 point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
                 label_index += 1
-                y += 1
-            x += 1
+                y += 10
+            x += 10
         pollution_maps[map] = point_map
 
     return pollution_maps
@@ -487,12 +485,12 @@ def pick_uniform_random_points_on_map_of_maps(points, pick_number, standard_devi
 
     new_map = {}
     for label in points.keys():
-        new_map[label] = pick_uniform_random_points(points[label], pick_number,standard_deviation)
+        new_map[label] = pick_uniform_random_points(points[label], pick_number, standard_deviation)
 
     return new_map
 
 
-def pick_uniform_random_points(points, pick_number,  standard_deviation):
+def pick_uniform_random_points(points, pick_number, standard_deviation):
     """
     Picks a number of points from a list of points using a uniform random distribution
     :param points: Map of all the points {label: point}
@@ -515,9 +513,6 @@ def pick_uniform_random_points(points, pick_number,  standard_deviation):
         new_map.get(i).read_pollution_value(standard_deviation)
 
     return new_map
-
-
-
 
 
 def to_list_of_positions(points):
@@ -603,7 +598,6 @@ def plot_varied_std_deviations(length_scale_list, std_deviations, x_label, y_lab
     plt.show()
 
 
-
 def list_of_length_scales(bottom_bound, top_bound, steps):
     """
     Creates an array of used length scales during the graphing process
@@ -616,8 +610,6 @@ def list_of_length_scales(bottom_bound, top_bound, steps):
     for i in range(bottom_bound, top_bound, steps):
         length_scales.append(i)
     return length_scales
-
-
 
 
 def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gif"):
@@ -647,29 +639,40 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
     rot_animation.save(filename, dpi=80, writer='imagemagick')
     print("Finished Save")
 
+
 def graph_pollution_using_heat_map(points, title, side_length):
     plt.figure()
     plt.ion()
 
-
-
-    x,y, pollution = [],[],[]
+    y, x = np.mgrid[slice(5, (side_length - 1) * 10 + 10, 10),
+                    slice(5, (side_length - 1) * 10 + 10, 10)]
+    pollution = []
     max_pollution = 0
 
-    for i in range(0,side_length):
+    for i in range(0, side_length):
         pollution.append([])
-        for j in range(0,side_length):
+
+        for j in range(0, side_length):
             pollution[i].append(0)
 
-    for label, point in points.items():
-        pollution[point.get_x_cord()][ point.get_y_cord()] = point.get_pollution_value()
-        if max_pollution < point.get_pollution_value():
-            max_pollution = point.get_pollution_value()
+    x_pos = 0
+    y_pos = 0
+    for label in range(0, len(points.keys())):
+        pollution[x_pos][y_pos] = points[label].get_pollution_value()
+        if max_pollution < points[label].get_pollution_value():
+            max_pollution = points[label].get_pollution_value()
+        y_pos += 1
+        if x_pos == side_length:
+            print("opps error")
+
+        if y_pos == side_length:
+            y_pos = 0
+            x_pos +=1
 
 
 
 
-    plt.pcolormesh(pollution, cmap='jet')
+    plt.pcolormesh(x, y, pollution, cmap='jet')
     plt.clim((0, max_pollution))
     plt.title(title)
     plt.xlabel('x (metres)')
@@ -684,12 +687,10 @@ def graph_pollution_using_heat_map(points, title, side_length):
 #                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
 
 
-
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=100, step =5,
 #                                                  side_length=10, mean=100, pick_number=20,
 #                                                  number_of_maps=100, standard_deviation=10)
-
 
 
 # see_what_its_doing_2d(length_scale=40,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 50)
@@ -698,6 +699,8 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 #  Playing around with gaussian disperssion stuff
 
-points = create_points_using_atmospheric_model([10,30], [10,30], 50, 1)
-b= pick_uniform_random_points_on_map_of_maps(points,2500,0)
-graph_pollution_using_heat_map(b[0], "title",side_length = 50)
+side_length = 40
+
+points = create_points_using_atmospheric_model([200], [500 ], side_length, 1)
+b = pick_uniform_random_points_on_map_of_maps(points, side_length**2, 0)
+graph_pollution_using_heat_map(b[0], "title", side_length=side_length)
