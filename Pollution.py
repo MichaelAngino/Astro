@@ -211,7 +211,7 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
     return covariance
 
 
-def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
+def gaussian_atmospheric_dispersion_model(source_x, source_y):
     """
     Creates a model of realistic pollution values given a source point
     :param source_x: x-coordinate of source point
@@ -255,9 +255,9 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     Ms = [58.44e-3, 98e-3, 200e-3, 80e-3]
     Mw = 18e-3
 
-    dxy = 10  # resolution of the model in both x and y directions
+    dxy = 100  # resolution of the model in both x and y directions
     dz = 10
-    x = np.mgrid[5:5 + (side_length - 1) * 10 + dxy:dxy]  # solve on a 5 km domain
+    x = np.mgrid[-2500:2500 + dxy:dxy]  # solve on a 5 km domain
     y = x  # x-grid is same as y-grid
     ###########################################################################
 
@@ -276,15 +276,15 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     x_slice = 26  # position (1-50) to take the slice in the x-direction
     y_slice = 1  # position (1-50) to plot concentrations vs time
 
-    wind = CONSTANT_WIND
+    wind = PREVAILING_WIND
     stacks = ONE_STACK
     # only using one pollution source point (one stack)
-    stack_x = [source_x]
-    stack_y = [source_y]
+    stack_x = [source_x, 0., 0., 50., 50.]
+    stack_y = [source_y, 0., 50., 0., 50.]
 
-    Q = [10.]  # mass emitted per unit time
-    H = [50.]  # [50., 50., 50.]  # stack height, m
-    days = 10  # run the model for 365 days
+    Q = [40., 40., 40.]  # mass emitted per unit time
+    H = [50., 50., 50.]  # stack height, m
+    days = 50  # run the model for 365 days
     # --------------------------------------------------------------------------
     times = np.mgrid[1:(days) * 24 + 1:1] / 24.
 
@@ -354,48 +354,43 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     return np.mean(C1, axis=2) * 1e6
 
 
-def create_points_using_atmospheric_model(x_source_list, y_source_list, side_length, number_of_maps):
+def create_points_using_atmospheric_model(x_source, y_source, side_length, number_of_maps):
     """
     Returns a matrix of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
     pollution values given a source point
-    :param x_source_list: list of x-coordinate of source point
-    :param y_source_list: list of  y-coordinate of source point
+    :param x_source: x-coordinate of source point
+    :param y_source: y-coordinate of source point
     :param side_length: side length of point map square
     :param number_of_maps: number of different pollution maps used
     :return:
     """
     pollution_maps = {}
 
-    x = 5
+    x = 0
     label_index = 0
-    for map in range(0, number_of_maps): #loops through for each map
-
-        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0], side_length) #Creates map of all the pollution simulations
-        for i in range(1, len(x_source_list)):
-            pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i], side_length)
-
+    for map in range(0, number_of_maps):
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source, y_source)
         point_map = {}
-        for i in range(0, side_length): #assigns pollution values to points
-            y = 5
+        for i in range(0, side_length):
+            y = 0
             for j in range(0, side_length):
                 point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
                 label_index += 1
-                y += 10
-            x += 10
+                y += 1
+            x += 1
         pollution_maps[map] = point_map
 
     return pollution_maps
 
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
-                                       fixed=False, alpha=None):
+                                       fixed=False):
     """
      Predicts points based on known data using Kriging (Gaussian Processes)
     :param known_points: list of points
     :param wanted_point_positions: list of wanted point posistions [[x1,y1], [x2,y2]]
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
-    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :return: a list of all predicted pollution values
     """
 
@@ -404,11 +399,10 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
 
     if fixed:
         gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
-                                      optimizer=None, alpha=alpha)  # Instantiate a fixed Gaussian Process model
+                                      optimizer=None)  # Instantiate a fixed Gaussian Process model
     else:
         gp = GaussianProcessRegressor(kernel,
-                                      n_restarts_optimizer=10,
-                                      alpha=alpha)  # Instantiate an optimized Gaussian Process model
+                                      n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -426,14 +420,13 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     return gp.predict(wanted_point_positions), gp.kernel_.length_scale
 
 
-def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False, alpha=None):
+def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
     :param all_points: A Dictionary of all points that exist {Label: point}
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
-    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :return: A new map with interpolated pollution values {Label : point}
     """
     unknown_positions = []
@@ -447,8 +440,7 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
     interpolated_pollution_values, length_scale = interpolate_points_using_positions(known_points,
                                                                                      unknown_positions,
                                                                                      kernel,
-                                                                                     fixed,
-                                                                                     alpha=alpha)  # interpolates the pollution values for the posistions where we have not measured pollution values
+                                                                                     fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -460,11 +452,9 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
     return (interpolated_map, length_scale)
 
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False,
-                                                          alpha=None):
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False):
     """
 
-    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :param known_points: A map of maps of all points that have been measured
     :param all_points:  A  map of maps of all points that exist
     :param kernel:  Kernal to use in interpolation
@@ -474,8 +464,7 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
 
     interpolated_maps = {}
     for label in all_points.keys():
-        interpolated_maps[label] = interpolate_unknown_points(known_points[label], all_points[label], kernel, fixed,
-                                                              alpha)
+        interpolated_maps[label] = interpolate_unknown_points(known_points[label], all_points[label], kernel, fixed)
 
     return interpolated_maps
 
@@ -648,71 +637,46 @@ def plot_numbers_3d_and_save(x1, y1, z1, x2, y2, z2, filename="Rotating Graph.gi
 
 
 def graph_pollution_using_heat_map(points, title, side_length):
-    """
-    Creates HeatMap graph of pollution in 2d
-    :param points: Map of points
-    :param title: Title of graph
-    :param side_length: Side length of points box
-    :return:
-    """
     plt.figure()
     plt.ion()
 
-    y, x = np.mgrid[slice(5, (side_length - 1) * 10 + 10, 10),
-                    slice(5, (side_length - 1) * 10 + 10, 10)] #create grid for pcolormesh
-    pollution = []
+    x, y, pollution = [], [], []
     max_pollution = 0
 
-    for i in range(0, side_length): #initalizes empty matrix
+    for i in range(0, side_length):
         pollution.append([])
         for j in range(0, side_length):
             pollution[i].append(0)
 
-    x_pos = 0
-    y_pos = 0
-    for label in range(0, len(points.keys())): #fill matrix with correct pollution data
-        pollution[x_pos][y_pos] = points[label].get_pollution_value()
-        if max_pollution < points[label].get_pollution_value(): #finds max pollution value for coloring
-            max_pollution = points[label].get_pollution_value()
-        y_pos += 1
-        if x_pos == side_length:
-            raise Exception("Error, This should never be true in graph_pollution_using_heat_map")
+    for label, point in points.items():
+        pollution[point.get_x_cord()][point.get_y_cord()] = point.get_pollution_value()
+        if max_pollution < point.get_pollution_value():
+            max_pollution = point.get_pollution_value()
 
-        if y_pos == side_length:
-            y_pos = 0
-            x_pos += 1
-
-    plt.pcolormesh(x, y, pollution, cmap='jet') #graphing functions
+    plt.pcolormesh(pollution, cmap='jet')
     plt.clim((0, max_pollution))
     plt.title(title)
     plt.xlabel('x (metres)')
     plt.ylabel('y (metres)')
     cb1 = plt.colorbar()
-    cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
+    cb1.set_label('$\mu$ g m$^{-3}$')
     plt.show()
 
 
-#TEST CODE
-
+"""
+Testing functions and graphing
+"""
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
 #                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
-
-
 # run_experiment_with_various_length_scales_log(.000001, 1000000, 10, 100, 20, 2)
 # run_experiment_with_various_length_scales_linear(bottom_bound=10, top_bound=100, step =5,
 #                                                  side_length=10, mean=100, pick_number=20,
 #                                                  number_of_maps=100, standard_deviation=10)
-
-
 # see_what_its_doing_2d(length_scale=40,cheating= True,pollution_mean= 150, pollution_std= 10, pick_number= 50)
 # see_what_its_doing_2d_comparison(10,True)
 
-
-#  Playing around with gaussian disperssion stuff
-
-side_length = 40
-
-points = create_points_using_atmospheric_model([200], [500], side_length, 1)
-b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
-graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
+#  Playing around with gaussian dispersion stuff
+points = create_points_using_atmospheric_model(25, 25, 50, 1)
+b = pick_uniform_random_points_on_map_of_maps(points, 2500, 0)
+graph_pollution_using_heat_map(b[0], "title", side_length=50)
