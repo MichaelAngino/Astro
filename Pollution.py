@@ -283,7 +283,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     stack_y = [source_y]
 
     Q = [10.]  # mass emitted per unit time
-    H = [50.] #[50., 50., 50.]  # stack height, m
+    H = [50.]  # [50., 50., 50.]  # stack height, m
     days = 10  # run the model for 365 days
     # --------------------------------------------------------------------------
     times = np.mgrid[1:(days) * 24 + 1:1] / 24.
@@ -388,13 +388,14 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
 
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
-                                       fixed=False):
+                                       fixed=False, alpha=None):
     """
      Predicts points based on known data using Kriging (Gaussian Processes)
     :param known_points: list of points
     :param wanted_point_positions: list of wanted point posistions [[x1,y1], [x2,y2]]
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
+    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :return: a list of all predicted pollution values
     """
 
@@ -403,10 +404,11 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
 
     if fixed:
         gp = GaussianProcessRegressor(kernel, n_restarts_optimizer=10,
-                                      optimizer=None)  # Instantiate a fixed Gaussian Process model
+                                      optimizer=None, alpha=alpha)  # Instantiate a fixed Gaussian Process model
     else:
         gp = GaussianProcessRegressor(kernel,
-                                      n_restarts_optimizer=10)  # Instantiate an optimized Gaussian Process model
+                                      n_restarts_optimizer=10,
+                                      alpha=alpha)  # Instantiate an optimized Gaussian Process model
 
     known_points_position_list = to_list_of_positions(known_points)
 
@@ -424,13 +426,14 @@ def interpolate_points_using_positions(known_points, wanted_point_positions, ker
     return gp.predict(wanted_point_positions), gp.kernel_.length_scale
 
 
-def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False):
+def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=False, alpha=None):
     """
     Interpolate pollution values for points that are have not been measured
     :param known_points: A Dictionary of all points that have been measured {label:point}
     :param all_points: A Dictionary of all points that exist {Label: point}
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
+    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :return: A new map with interpolated pollution values {Label : point}
     """
     unknown_positions = []
@@ -444,7 +447,8 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
     interpolated_pollution_values, length_scale = interpolate_points_using_positions(known_points,
                                                                                      unknown_positions,
                                                                                      kernel,
-                                                                                     fixed)  # interpolates the pollution values for the posistions where we have not measured pollution values
+                                                                                     fixed,
+                                                                                     alpha=alpha)  # interpolates the pollution values for the posistions where we have not measured pollution values
 
     interpolated_map = copy_dictionary_with_points(known_points)  # creates a copy of the known_points dictionary
 
@@ -456,9 +460,11 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
     return (interpolated_map, length_scale)
 
 
-def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False):
+def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_points, kernel=None, fixed=False,
+                                                          alpha=None):
     """
 
+    :param alpha: Alpha for regression ( amount of uncertainty assumed)
     :param known_points: A map of maps of all points that have been measured
     :param all_points:  A  map of maps of all points that exist
     :param kernel:  Kernal to use in interpolation
@@ -468,7 +474,8 @@ def interpolate_unknown_points_of_a_map_of_maps_of_points(known_points, all_poin
 
     interpolated_maps = {}
     for label in all_points.keys():
-        interpolated_maps[label] = interpolate_unknown_points(known_points[label], all_points[label], kernel, fixed)
+        interpolated_maps[label] = interpolate_unknown_points(known_points[label], all_points[label], kernel, fixed,
+                                                              alpha)
 
     return interpolated_maps
 
@@ -667,10 +674,7 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
         if y_pos == side_length:
             y_pos = 0
-            x_pos +=1
-
-
-
+            x_pos += 1
 
     plt.pcolormesh(x, y, pollution, cmap='jet')
     plt.clim((0, max_pollution))
@@ -701,6 +705,6 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 side_length = 40
 
-points = create_points_using_atmospheric_model([200], [500 ], side_length, 1)
-b = pick_uniform_random_points_on_map_of_maps(points, side_length**2, 0)
+points = create_points_using_atmospheric_model([200], [500], side_length, 1)
+b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 graph_pollution_using_heat_map(b[0], "title", side_length=side_length)
