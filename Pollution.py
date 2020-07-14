@@ -754,7 +754,7 @@ def graph_error_based_on_different_number_sources(side_length,max_number_of_sour
         picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points, standard_deviation=error_of_measurment)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points,points,
                                                                                     RBF(np.random.randint(1e-05,
-                                                                                                          100)), False,alpha=error_of_measurment **2)
+                                                                                                          100)), False,alpha=.1 )
         rmse_data.append(average_rmse_of_maps(interpolated_points))
 
         print("Source number:"+ str(current_num_sources) + " Done")
@@ -803,4 +803,4 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
 
-graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40, num_picked_points= 100)
+graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40, num_picked_points= 100, error_of_measurment= 5)
