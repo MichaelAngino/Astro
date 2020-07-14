@@ -745,22 +745,22 @@ def graph_pollution_using_heat_map(points, title, side_length):
     cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
     plt.show()
 
-def graph_error_based_on_different_number_sources(side_length,max_number_of_sources, number_of_maps):
+def graph_error_based_on_different_number_sources(side_length,max_number_of_sources, number_of_maps, num_picked_points):
 
     rmse_data = []
     for current_num_sources in range(1,max_number_of_sources+1):
 
         points = create_points_using_atmospheric_model_random_locations(current_num_sources,side_length,number_of_maps)
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, 20, standard_deviation= 0)
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points, standard_deviation= 0)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points,points,
                                                                                     RBF(np.random.randint(1e-05,
                                                                                                           100)), False,1)
         rmse_data.append(average_rmse_of_maps(interpolated_points))
 
         print("Source number:"+ str(current_num_sources) + " Done")
-        graph_heatmap_best_interpolation(points,interpolated_points[current_num_sources], side_length)
+        graph_heatmap_best_interpolation(points,interpolated_points, side_length)
 
-    plot_bar_graph(range(1, max_number_of_sources), rmse_data,x_label= "number of sources", y_label= "RMSE")
+    plot_bar_graph(range(1, max_number_of_sources+1), rmse_data,x_label= "number of sources", y_label= "RMSE")
 
 
 def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
@@ -769,15 +769,15 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
     rmse_list = []
     min_rmse = math.inf
     min_label = None
-    for label in interpolated_points[0].keys():
-        rmse = root_mean_square_error(interpolated_points[0][label])
+    for label in interpolated_points.keys():
+        rmse = root_mean_square_error(interpolated_points[label][0])
         rmse_list.append(rmse)
         if rmse < min_rmse:
             min_rmse = rmse
             min_label = label
 
-    graph_pollution_using_heat_map(true_pollution_points, "true values", side_length)
-    graph_pollution_using_heat_map(interpolated_points[0], "interpolated values", side_length)
+    graph_pollution_using_heat_map(true_pollution_points[min_label], "true values", side_length)
+    graph_pollution_using_heat_map(interpolated_points[min_label][0], "interpolated values RMSE = " + str(min_rmse), side_length)
 
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
@@ -803,4 +803,4 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
 
-graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40)
+graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40, num_picked_points= 100)
