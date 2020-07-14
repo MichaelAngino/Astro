@@ -367,13 +367,13 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
     pollution_maps = {}
 
     x = 5
-    label_index = 0
+
     for map in range(0, number_of_maps): #loops through for each map
 
         pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0], side_length) #Creates map of all the pollution simulations
         for i in range(1, len(x_source_list)):
             pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i], side_length)
-
+        label_index = 0
         point_map = {}
         for i in range(0, side_length): #assigns pollution values to points
             y = 5
@@ -400,7 +400,7 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
     pollution_maps = {}
 
     x = 5
-    label_index = 0
+
     for map in range(0, number_of_maps):  # loops through for each map
 
         pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0,side_length*10),
@@ -410,6 +410,8 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
             pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10), #adds additional pollution sources to pollution values
         np.random.randint(250, side_length * 10 + 250), side_length)
 
+
+        label_index = 0
         point_map = {}
         for i in range(0, side_length):  # assigns pollution values to points
             y = 5
@@ -597,6 +599,11 @@ def root_mean_square_error(points):
 
 
 def average_rmse_of_maps(maps_of_points):
+    """
+
+    :param maps_of_points:
+    :return: Returns double of average rmse of maps
+    """
     num_of_maps = len(maps_of_points)
     sum = 0
     for label in maps_of_points.keys():
@@ -604,7 +611,7 @@ def average_rmse_of_maps(maps_of_points):
     return sum / num_of_maps
 
 
-def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_scale=False):
+def plot_numbers(x_axis, y_axis,  x_label, y_label, x_log_scale=False, x_axis_2=None, y_axis_2=None,):
     """
     Plots Numbers on a graph
     :param y_label: Label for Y-axis of graph
@@ -613,14 +620,26 @@ def plot_numbers(x_axis, y_axis, x_axis_2, y_axis_2, x_label, y_label, x_log_sca
     :param y_axis, y_axis_2: Y-values for the graph in list form
     :return:
     """
-    plt.plot(x_axis, y_axis, "ro", x_axis_2, y_axis_2, "go")
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    if x_log_scale:
-        plt.xscale("log")
+    if x_axis_2 == None or y_axis_2 == None:
+        plt.plot(x_axis, y_axis, "ro")
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        if x_log_scale:
+            plt.xscale("log")
+    else:
+        plt.plot(x_axis, y_axis, "ro", x_axis_2, y_axis_2, "go")
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        if x_log_scale:
+            plt.xscale("log")
 
     plt.show()
 
+def plot_bar_graph(x_axis, y_axis, x_label, y_label):
+    plt.bar(x_axis,y_axis)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.show()
 
 def plot_varied_std_deviations(length_scale_list, std_deviations, x_label, y_label):
     """
@@ -726,15 +745,39 @@ def graph_pollution_using_heat_map(points, title, side_length):
     cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
     plt.show()
 
-def graph_error_based_on_different_number_sources(side_length,number_of_sources, number_of_maps):
+def graph_error_based_on_different_number_sources(side_length,max_number_of_sources, number_of_maps):
+
+    rmse_data = []
+    for current_num_sources in range(1,max_number_of_sources+1):
+
+        points = create_points_using_atmospheric_model_random_locations(current_num_sources,side_length,number_of_maps)
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, 20, standard_deviation= 0)
+        interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points,points,
+                                                                                    RBF(np.random.randint(1e-05,
+                                                                                                          100)), False,1)
+        rmse_data.append(average_rmse_of_maps(interpolated_points))
+
+        print("Source number:"+ str(current_num_sources) + " Done")
+        graph_heatmap_best_interpolation(points,interpolated_points[current_num_sources], side_length)
+
+    plot_bar_graph(range(1, max_number_of_sources), rmse_data,x_label= "number of sources", y_label= "RMSE")
 
 
-    points = create_points_using_atmospheric_model([200], [500], side_length, number_of_maps)
+def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
+    true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
+    num_of_maps = len(points)
+    rmse_list = []
+    min_rmse = math.inf
+    min_label = None
+    for label in interpolated_points[0].keys():
+        rmse = root_mean_square_error(interpolated_points[0][label])
+        rmse_list.append(rmse)
+        if rmse < min_rmse:
+            min_rmse = rmse
+            min_label = label
 
-
-    b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
-
-#TEST CODE
+    graph_pollution_using_heat_map(true_pollution_points, "true values", side_length)
+    graph_pollution_using_heat_map(interpolated_points[0], "interpolated values", side_length)
 
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
@@ -753,8 +796,11 @@ def graph_error_based_on_different_number_sources(side_length,number_of_sources,
 
 #  Playing around with gaussian disperssion stuff
 
-side_length = 40
+# side_length = 40
+#
+# points = create_points_using_atmospheric_model([200], [500], side_length, 1)
+# b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
+# graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-points = create_points_using_atmospheric_model([200], [500], side_length, 1)
-b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
-graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
+
+graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40)
