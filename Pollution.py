@@ -386,6 +386,41 @@ def create_points_using_atmospheric_model(x_source_list, y_source_list, side_len
 
     return pollution_maps
 
+def create_points_using_atmospheric_model_random_locations(number_of_sources, side_length, number_of_maps):
+    """
+     Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
+     pollution values given the number of pollution sources.
+
+     The posistions of the sources are assigned randomly
+     :param number_of_sources: The number of pollution sources
+     :param side_length: side length of point map square
+     :param number_of_maps: number of different pollution maps used
+     :return:
+     """
+    pollution_maps = {}
+
+    x = 5
+    label_index = 0
+    for map in range(0, number_of_maps):  # loops through for each map
+
+        pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0,side_length*10),
+                                                                 np.random.randint(250, side_length* 10+ 250),
+                                                                 side_length)  # Creates matrix of pollution using first source
+        for i in range(1, number_of_sources):
+            pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10), #adds additional pollution sources to pollution values
+        np.random.randint(250, side_length * 10 + 250), side_length)
+
+        point_map = {}
+        for i in range(0, side_length):  # assigns pollution values to points
+            y = 5
+            for j in range(0, side_length):
+                point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+                label_index += 1
+                y += 10
+            x += 10
+        pollution_maps[map] = point_map
+
+    return pollution_maps
 
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False, alpha=None):
@@ -691,6 +726,13 @@ def graph_pollution_using_heat_map(points, title, side_length):
     cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
     plt.show()
 
+def graph_error_based_on_different_number_sources(side_length,number_of_sources, number_of_maps):
+
+
+    points = create_points_using_atmospheric_model([200], [500], side_length, number_of_maps)
+
+
+    b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 
 #TEST CODE
 
