@@ -745,16 +745,16 @@ def graph_pollution_using_heat_map(points, title, side_length):
     cb1.set_label("Pollutants") #old label = '$\mu$ g m$^{-3}$'
     plt.show()
 
-def graph_error_based_on_different_number_sources(side_length,max_number_of_sources, number_of_maps, num_picked_points):
+def graph_error_based_on_different_number_sources(side_length,max_number_of_sources, number_of_maps, num_picked_points, error_of_measurment):
 
     rmse_data = []
     for current_num_sources in range(1,max_number_of_sources+1):
 
         points = create_points_using_atmospheric_model_random_locations(current_num_sources,side_length,number_of_maps)
-        picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points, standard_deviation= 0)
+        picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points, standard_deviation=error_of_measurment)
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points,points,
                                                                                     RBF(np.random.randint(1e-05,
-                                                                                                          100)), False,1)
+                                                                                                          100)), False,alpha=error_of_measurment **2)
         rmse_data.append(average_rmse_of_maps(interpolated_points))
 
         print("Source number:"+ str(current_num_sources) + " Done")
