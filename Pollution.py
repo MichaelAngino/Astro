@@ -234,8 +234,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     ONE_STACK = 1
     TWO_STACKS = 2
     THREE_STACKS = 3
-    # FOUR_STACKS = 4
-    # FIVE_STACKS = 5
+
 
     # stability of the atmosphere
     CONSTANT_STABILITY = 1
@@ -282,7 +281,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     stack_x = [source_x]
     stack_y = [source_y]
 
-    Q = [10.]  # mass emitted per unit time
+    Q = [1.]  # mass emitted per unit time ::: originially 10
     H = [50.]  # [50., 50., 50.]  # stack height, m
     days = 10  # run the model for 365 days
     # --------------------------------------------------------------------------
@@ -768,7 +767,9 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length, n
     num_of_maps = len(points)
     rmse_list = []
     min_rmse = math.inf
-    min_label = None
+    min_label, max_label = None, None
+    max_rmse = 0
+
     for label in interpolated_points.keys():
         rmse = root_mean_square_error(interpolated_points[label][0])
         rmse_list.append(rmse)
@@ -776,9 +777,18 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length, n
             min_rmse = rmse
             min_label = label
 
-    graph_pollution_using_heat_map(true_pollution_points[min_label], "true values", side_length)
-    graph_pollution_using_heat_map(interpolated_points[min_label][0], "interpolated values RMSE = " + str(min_rmse) + ", Number of Sources = " + str(number_of_sources) , side_length)
+        if rmse> max_rmse:
+            max_rmse = rmse
+            max_rmse = label
 
+    graph_pollution_using_heat_map(true_pollution_points[min_label], "true values", side_length)
+    graph_pollution_using_heat_map(interpolated_points[min_label][0], "best interpolated values| RMSE = " + str(truncate(min_rmse,3)) + ", Number of Sources = " + str(number_of_sources) , side_length)
+    graph_pollution_using_heat_map(interpolated_points[max_label][0], "worst interpolated values| RMSE = " + str(
+        truncate(max_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length)
+
+def truncate(number, digits) -> float:
+    stepper = 10.0 ** digits
+    return math.trunc(stepper * number) / stepper
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
 #                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
@@ -803,4 +813,4 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length, n
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
 
-graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 10, side_length= 40, num_picked_points= 100, error_of_measurment= 5)
+graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 10, side_length= 40, num_picked_points= 150, error_of_measurment= 5)
