@@ -758,12 +758,12 @@ def graph_error_based_on_different_number_sources(side_length,max_number_of_sour
         rmse_data.append(average_rmse_of_maps(interpolated_points))
 
         print("Source number:"+ str(current_num_sources) + " Done")
-        graph_heatmap_best_interpolation(points,interpolated_points, side_length)
+        graph_heatmap_best_interpolation(points,interpolated_points, side_length, current_num_sources)
 
     plot_bar_graph(range(1, max_number_of_sources+1), rmse_data,x_label= "number of sources", y_label= "RMSE")
 
 
-def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
+def graph_heatmap_best_interpolation(points, interpolated_points, side_length, number_of_sources):
     true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
     num_of_maps = len(points)
     rmse_list = []
@@ -777,7 +777,7 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
             min_label = label
 
     graph_pollution_using_heat_map(true_pollution_points[min_label], "true values", side_length)
-    graph_pollution_using_heat_map(interpolated_points[min_label][0], "interpolated values RMSE = " + str(min_rmse), side_length)
+    graph_pollution_using_heat_map(interpolated_points[min_label][0], "interpolated values RMSE = " + str(min_rmse) + ", Number of Sources = " + str(number_of_sources) , side_length)
 
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
@@ -803,4 +803,4 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length):
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
 
-graph_error_based_on_different_number_sources(number_of_maps= 20, max_number_of_sources= 2, side_length= 40, num_picked_points= 100, error_of_measurment= 5)
+graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 10, side_length= 40, num_picked_points= 100, error_of_measurment= 5)
