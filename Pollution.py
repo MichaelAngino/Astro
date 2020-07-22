@@ -580,14 +580,14 @@ def root_mean_square_error(points):
     """
     Finds the RMSE of the interpolated pollution values
     param points: A dictionary of points {label : point}
-    There is a manual flag in the code to switch from regular rmse to normalized rmse
+    There is a manual flag in the code to switch from regular rmse to relative rmse
     :return: The RMSE of the pollution values found through interpolation
     """
 
-    normalized = True  # allows manual change from normalized rmse and normal rmse
+    relative = True  # allows manual change between relative rmse and  rmse
 
 
-    if not normalized: #if just using rmse
+    if not relative: #if just using rmse
         sum = 0
         for point in points.values(): #does rmse formula
             sum += pow(np.abs(point.get_pollution_value()) - np.abs(point.get_actual_pollution_value()), 2)
@@ -806,6 +806,81 @@ def graph_heatmap_best_interpolation(points, interpolated_points, side_length, n
 def truncate(number, digits) -> float:
     stepper = 10.0 ** digits
     return math.trunc(stepper * number) / stepper
+
+
+def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_measurments, max_number_of_sources, number_of_maps, num_picked_points):
+    rmse_data = {}
+    tree= 0
+    for current_alpha in np.arange(lower_alpha,higher_alpha, .1):
+        current_alpha = truncate(current_alpha, 3)
+        rmse_data_for_certain_alpha = {}
+        for current_num_sources in range(1, max_number_of_sources + 1):
+            points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
+                                                                            number_of_maps)
+            picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
+                                                                      standard_deviation=std_of_measurments)
+            interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                        RBF(np.random.randint(1e-05,
+                                                                                                              100)), False,
+                                                                                        alpha=current_alpha)
+            rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
+            print("Source number:" + str(current_num_sources) + " Done")
+
+        rmse_data[current_alpha] = rmse_data_for_certain_alpha
+        print("Alpha:" + str(current_alpha) + " Done")
+
+
+    min_rmse = math.inf
+    min_alpha = None
+    avg_rmse_map_of_all_alphas= {}
+
+    for alpha, rmse_list in rmse_data.items():
+        sum = 0
+        for value in rmse_list.values():
+            sum += value
+        avg_rmse = sum / len(rmse_list.values())
+        if min_rmse > avg_rmse:
+            min_rmse = avg_rmse
+            min_alpha = alpha
+
+    for num_sources in range(1, max_number_of_sources + 1):
+        sum = 0
+        for alpha in np.arange(lower_alpha, higher_alpha, .1):
+            alpha = truncate(alpha, 3)
+            sum += rmse_data[alpha][num_sources]
+        mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
+        avg_rmse_map_of_all_alphas[num_sources] = mean
+
+
+    x_cord = range(1, max_number_of_sources + 1)
+    y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
+    y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
+
+    # plt.scatter(x_cord, y1_cord, "ro", x_cord, y2_cord, "go")
+    plt.plot(x_cord,y1_cord,"ro-",x_cord,y2_cord,"go-")
+    plt.xlabel("Number of Sources")
+    plt.ylabel("RSME")
+    plt.show()
+
+def put_y_values_in_right_order(map):
+    key_list = []
+    y_cord = []
+    for key in map.keys():
+        key_list.append(key)
+    key_list.sort()
+    for key in key_list:
+        y_cord.append(map[key])
+    return y_cord
+
+
+
+
+
+
+
+
+
+
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
 #                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
@@ -830,4 +905,6 @@ def truncate(number, digits) -> float:
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
 
-graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 5, side_length= 40, num_picked_points= 150, error_of_measurment= 5)
+# graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 5, side_length= 40, num_picked_points= 150, error_of_measurment= 5)
+
+experiment_test_all_alphas(lower_alpha= .1, higher_alpha= 10, side_length= 40, std_of_measurments= 5, max_number_of_sources=5, number_of_maps=100, num_picked_points=100)
