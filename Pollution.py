@@ -860,7 +860,11 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     plt.plot(x_cord,y1_cord,"ro-",x_cord,y2_cord,"go-")
     plt.xlabel("Number of Sources")
     plt.ylabel("RSME")
+    plt.title("Best Alpha = " + str(min_alpha))
     plt.show()
+    print("done")
+
+
 
 def put_y_values_in_right_order(map):
     key_list = []
@@ -908,3 +912,6 @@ def put_y_values_in_right_order(map):
 # graph_error_based_on_different_number_sources(number_of_maps= 100, max_number_of_sources= 5, side_length= 40, num_picked_points= 150, error_of_measurment= 5)
 
 experiment_test_all_alphas(lower_alpha= .1, higher_alpha= 10, side_length= 40, std_of_measurments= 5, max_number_of_sources=5, number_of_maps=100, num_picked_points=100)
+
+# experiment_test_all_alphas(lower_alpha=.1, higher_alpha=.5, side_length=40, std_of_measurments=5,
+#                            max_number_of_sources=5, number_of_maps=1, num_picked_points=100)
