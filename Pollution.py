@@ -362,7 +362,7 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
      Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
      pollution values given the number of pollution sources.
 
-     The posistions of the sources are assigned randomly
+     The positions of the sources are assigned randomly
      :param normalized: Flag to set normalized to True or False
      :param number_of_sources: The number of pollution sources
      :param side_length: side length of point map square
@@ -621,6 +621,14 @@ def plot_numbers(x_axis, y_axis, x_label, y_label, x_log_scale=False, x_axis_2=N
 
 
 def plot_bar_graph(x_axis, y_axis, x_label, y_label):
+    """
+    Plots a bar graph for RMSE values with respect to the number of sources used in the pollution map
+    :param x_axis: values for the x-axis of the graph
+    :param y_axis: values for the y-axis of the graph
+    :param x_label: variable on x-axis
+    :param y_label: variable on y-axis
+    :return: a plotted bar graph
+    """
     plt.bar(x_axis, y_axis)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -735,27 +743,47 @@ def graph_pollution_using_heat_map(points, title, side_length):
 def graph_error_based_on_different_number_sources(side_length, max_number_of_sources, number_of_maps, num_picked_points,
                                                   error_of_measurment,
                                                   normalized_pollution_values=False):
+    """
+    Method to test how RMSE varies when changing the number of pollution sources on map
+    :param side_length: side length of pollution square map
+    :param max_number_of_sources: maximum number of sources used
+    :param number_of_maps: number of maps used in calculations
+    :param num_picked_points: number of known pollution values on graph
+    :param error_of_measurment: standard deviation of error in measurement
+    :param normalized_pollution_values: decides whether to normalize the pollution values or not
+    :return:
+    """
     rmse_data = []
-    for current_num_sources in range(1, max_number_of_sources + 1):
+    for current_num_sources in range(1, max_number_of_sources + 1): # loops through number of sources to be used
         points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
                                                                         number_of_maps,
-                                                                        normalized_pollution_values)
+                                                                        normalized_pollution_values) # creation of pollution points
         picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                  standard_deviation=error_of_measurment)
+                                                                  standard_deviation=error_of_measurment) # selecting known points
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(np.random.randint(1e-05,
                                                                                                           100)), False,
-                                                                                    alpha=.1)
-        rmse_data.append(average_rmse_of_maps(interpolated_points))
+                                                                                    alpha=.1) # interpolating points with specific parameters
+        rmse_data.append(average_rmse_of_maps(interpolated_points)) # adding average rmse of interpolated points maps to a list of rmse data
 
         print("Source number:" + str(current_num_sources) + " Done")
         graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side_length, current_num_sources)
 
-    plot_bar_graph(range(1, max_number_of_sources + 1), rmse_data, x_label="number of sources", y_label="RMSE")
+    plot_bar_graph(range(1, max_number_of_sources + 1), rmse_data, x_label="number of sources", y_label="RMSE") # plots a bar graph of
+    #                                                                                                            RMSE vs number of sources
 
 
 def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side_length, number_of_sources):
-    true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
+    """
+        Graphs a pollution heatmap using the best possible interpolation of poitns
+        :param points: map of pollution points
+        :param interpolated_points: map of interpolated points
+        :param side_length: side length of pollution square map
+        :param number_of_sources: number of pollution sources on graph
+        :return: a heatmap of pollution values
+        """
+    true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)  # initializing true values for pollution
+    #                                                                                                 map
     num_of_maps = len(points)
     rmse_list = []
     min_rmse = math.inf
@@ -763,6 +791,7 @@ def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side
     max_label = None
     max_rmse = 0
 
+    # finding minimum and maximum rmse from list of RMSE values from maps of interpolated points
     for label in interpolated_points.keys():
 
         rmse = root_mean_square_error(interpolated_points[label][0])
@@ -777,18 +806,26 @@ def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side
 
     graph_pollution_using_heat_map(true_pollution_points[min_label],
                                    "best true values" + ", Number of Sources = " + str(
-                                       number_of_sources), side_length)
+                                       number_of_sources), side_length) # graphs pollution heatmap of the best true pollution values
     graph_pollution_using_heat_map(interpolated_points[min_label][0], "best interpolated values| RMSE = " + str(
-        truncate(min_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length)
+        truncate(min_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length) # graphs pollution heatmap of best
+    #                                                                                              interpolated pollution values
 
     graph_pollution_using_heat_map(true_pollution_points[max_label],
                                    "worst true values" + ", Number of Sources = " + str(
-                                       number_of_sources), side_length)
+                                       number_of_sources), side_length) # graphs heatmap of worst "true" pollution values
     graph_pollution_using_heat_map(interpolated_points[max_label][0], "worst interpolated values| RMSE = " + str(
-        truncate(max_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length)
+        truncate(max_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length) # graphs heatmap of worst
+    #                                                                                              interpolated pollutino values
 
 
 def truncate(number, digits) -> float:
+    """
+    Truncates a number to a certain number of digits
+    :param number: number to be truncated
+    :param digits: number of decimal places to truncate to
+    :return: a specifically truncated number
+    """
     stepper = 10.0 ** digits
     return math.trunc(stepper * number) / stepper
 
@@ -864,6 +901,11 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
 
 
 def put_y_values_in_right_order(map):
+    """
+    Rearranges the y values of the map
+    :param map: map to be rearranged
+    :return:
+    """
     key_list = []
     y_cord = []
     for key in map.keys():
@@ -874,6 +916,10 @@ def put_y_values_in_right_order(map):
     return y_cord
 
 
+
+"""
+Testing Methods
+"""
 # list_of_std_deviations = [1, 5, 10]
 # run_experiment_with_varied_standard_deviations(bottom_bound=10, top_bound=100, steps= 5, side_length= 10, mean =150, std_of_pollution= 10,
 #                                                std_deviation_values_of_measurment= list_of_std_deviations, pick_number= 20, num_maps= 100)
