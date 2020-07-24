@@ -239,7 +239,7 @@ elif output == SURFACE_TIME:
       sys.exit()
       
    ax1.set_xlabel('time (days)');
-   ax1.set_ylabel('Mass loading ($\mu$ g m$^{-3}$)');
+   #ax1.set_ylabel('Mass loading ($\mu$ g m$^{-3}$)');
    ax1.set_title(stability_str +'\n' + wind_dir_str);
 
    ax2.plot(times,stability);
