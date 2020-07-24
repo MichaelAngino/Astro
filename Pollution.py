@@ -343,7 +343,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, numbe
     # SECTION 3: Main loop
     # For all times...
     C1 = np.zeros((len(x), len(y), len(wind_dir)))
-    for i in tqdm.tqdm(range(0, len(wind_dir))):
+    for i in range(0, len(wind_dir)):
         for j in range(0, stacks):
             C = np.ones((len(x), len(y)))
             C = gauss_func(Q[j], wind_speed[i], wind_dir[i], x, y, z,

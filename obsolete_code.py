@@ -476,3 +476,15 @@ def see_what_its_doing_1d():
     plt.xlabel("Point Label")
     plt.ylabel("Pollution Value")
     plt.show()
+
+
+def test_plot(x, y):
+    plt.scatter(x, y)
+    plt.plot(x,y)
+    plt.show()
+
+
+x = [1,3,4,5,6]
+y = [4,5,2,3,1]
+
+test_plot(x,y)
