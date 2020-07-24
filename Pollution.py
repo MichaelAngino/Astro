@@ -281,7 +281,10 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, numbe
     stack_x = [source_x]
     stack_y = [source_y]
 
-    Q = [10. * 1/number_of_sources * (number_of_sources/10+1)]  # mass emitted per unit time ::: originially 10
+    if number_of_sources == 1: #if number of sources is one then dont need to normalize
+        Q = [10.]
+    else:
+         Q = [10. * 1/number_of_sources * (number_of_sources/10+1)]  # mass emitted per unit time ::: originially 10
     H = [50.]  # [50., 50., 50.]  # stack height, m
     days = 10  # run the model for 365 days
     # --------------------------------------------------------------------------
@@ -612,7 +615,7 @@ def root_mean_square_error(points):
     :return: The RMSE of the pollution values found through interpolation
     """
 
-    relative = True  # allows manual change between relative rmse and  rmse
+    relative = False  # allows manual change between relative rmse and  rmse
 
     if not relative:  # if just using rmse
         sum = 0
@@ -949,13 +952,13 @@ def put_y_values_in_right_order(map):
 # b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-# graph_error_based_on_different_number_sources(number_of_maps=10, max_number_of_sources=10, side_length=40,
-#                                               num_picked_points=150, error_of_measurment=5,
-#                                               normalized_pollution_values=True)
+graph_error_based_on_different_number_sources(number_of_maps=5, max_number_of_sources=10, side_length=40,
+                                              num_picked_points=150, error_of_measurment=5,
+                                              normalized_pollution_values=True)
 
 # experiment_test_all_alphas(lower_alpha=.1, higher_alpha=5, side_length=40, std_of_measurments=5,
 #                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
 #                            normalized_pollution_values=True)
 
-experiment_test_all_alphas(lower_alpha=.1, higher_alpha=.5, side_length=40, std_of_measurments=5,
-                           max_number_of_sources=5, number_of_maps=1, num_picked_points=50, normalized_pollution_values= False)
+# experiment_test_all_alphas(lower_alpha=.1, higher_alpha=.5, side_length=40, std_of_measurments=5,
+#                            max_number_of_sources=5, number_of_maps=10, num_picked_points=20, normalized_pollution_values= True)
