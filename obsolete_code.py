@@ -448,6 +448,43 @@ def run_interpolations_with_random_betas_1d():
 
     plot_numbers(rmse_values, picked_points_values)
 
+def create_points_using_atmospheric_model(x_source_list, y_source_list, side_length, number_of_maps):
+    """
+    Returns a matrix of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
+    pollution values given a source point
+    :param normalized:  Allows normalization of pollution values, prevents a scenario where more sources equals greater maximum pollution. .
+    :param x_source_list: list of x-coordinate of source point
+    :param y_source_list: list of  y-coordinate of source point
+    :param side_length: side length of point map square
+    :param number_of_maps: number of different pollution maps used
+    :return:
+    """
+    pollution_maps = {}
+    number_of_sources = len(x_source_list)
+
+    x = 5
+
+    for map in range(0, number_of_maps):  # loops through for each map
+
+        pollution_values = gaussian_atmospheric_dispersion_model(x_source_list[0], y_source_list[0],
+                                                                 side_length)  # Creates map of all the pollution simulations
+        for i in range(1, len(x_source_list)):
+            pollution_values += gaussian_atmospheric_dispersion_model(x_source_list[i], y_source_list[i],
+                                                                      side_length)  # adds additional sources to the pollution map
+        label_index = 0
+        point_map = {}
+
+        for i in range(0, side_length):  # assigns pollution values to points
+            y = 5
+            for j in range(0, side_length):
+                point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+                label_index += 1
+                y += 10
+            x += 10
+        pollution_maps[map] = point_map
+
+    return pollution_maps
+
 
 def see_what_its_doing_1d():
     """
