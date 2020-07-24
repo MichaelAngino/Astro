@@ -392,7 +392,7 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
         for i in range(0, side_length):  # assigns pollution values to points
             y = 5
             for j in range(0, side_length):
-                if normalized:
+                if normalized: #normalizes the pollution value if true
                     point_map[label_index] = Point(label_index, pollution_values[i][j]/max_poll_value*100, x, y)
                 else:
                     point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
@@ -451,7 +451,7 @@ def interpolate_unknown_points(known_points, all_points, kernel=None, fixed=Fals
     :param kernel:  Kernal to use in interpolation
     :param fixed:  True = no opitimization of hyperparamater, False = optimization of hyperparamter
     :param alpha: Alpha for regression ( amount of uncertainty assumed)
-    :return: A new map with interpolated pollution values {Label : point}
+    :return:  A tuple (points, lengthscale) points = A new map with interpolated pollution values {Label : point}, lengthscale = a double represeting the calculatd lengtscale
     """
     unknown_positions = []
     unknown_labels = []
@@ -749,12 +749,12 @@ def graph_error_based_on_different_number_sources(side_length, max_number_of_sou
         rmse_data.append(average_rmse_of_maps(interpolated_points))
 
         print("Source number:" + str(current_num_sources) + " Done")
-        graph_heatmap_best_interpolation(points, interpolated_points, side_length, current_num_sources)
+        graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side_length, current_num_sources)
 
     plot_bar_graph(range(1, max_number_of_sources + 1), rmse_data, x_label="number of sources", y_label="RMSE")
 
 
-def graph_heatmap_best_interpolation(points, interpolated_points, side_length, number_of_sources):
+def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side_length, number_of_sources):
     true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
     num_of_maps = len(points)
     rmse_list = []
@@ -809,20 +809,20 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     """
     rmse_data = {}
     tree = 0
-    for current_alpha in np.arange(lower_alpha, higher_alpha, .1):
-        current_alpha = truncate(current_alpha, 3)
+    for current_alpha in np.arange(lower_alpha, higher_alpha, .1): #loops through all alphas
+        current_alpha = truncate(current_alpha, 3)#fixes floating point precision
         rmse_data_for_certain_alpha = {}
-        for current_num_sources in range(1, max_number_of_sources + 1):
+        for current_num_sources in range(1, max_number_of_sources + 1): #loops through all numbers of sources
             points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
                                                                             number_of_maps,
-                                                                            normalized=normalized_pollution_values)
+                                                                            normalized=normalized_pollution_values) #creates points
             picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                      standard_deviation=std_of_measurments)
+                                                                      standard_deviation=std_of_measurments) #measures points
             interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                         RBF(np.random.randint(1e-05,
                                                                                                               100)),
                                                                                         False,
-                                                                                        alpha=current_alpha)
+                                                                                        alpha=current_alpha) #interpolates points
             rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
             print("Source number:" + str(current_num_sources) + " Done")
 
@@ -833,7 +833,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     min_alpha = None
     avg_rmse_map_of_all_alphas = {}
 
-    for alpha, rmse_list in rmse_data.items():
+    for alpha, rmse_list in rmse_data.items(): # finds best alpha that got the least rmse
         sum = 0
         for value in rmse_list.values():
             sum += value
@@ -842,7 +842,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
             min_rmse = avg_rmse
             min_alpha = alpha
 
-    for num_sources in range(1, max_number_of_sources + 1):
+    for num_sources in range(1, max_number_of_sources + 1): # averages rmse values from all alphas for each number of sources
         sum = 0
         for alpha in np.arange(lower_alpha, higher_alpha, .1):
             alpha = truncate(alpha, 3)
@@ -850,7 +850,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
         mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
         avg_rmse_map_of_all_alphas[num_sources] = mean
 
-    x_cord = range(1, max_number_of_sources + 1)
+    x_cord = range(1, max_number_of_sources + 1) #formatting for graphing
     y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
     y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
 
