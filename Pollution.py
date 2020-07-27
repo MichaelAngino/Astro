@@ -211,9 +211,10 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
     return covariance
 
 
-def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
+def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollution_val):
     """
     Creates a model of realistic pollution values given a source point
+    :param side_length: Number of points on each side of the square location
     :param number_of_sources: Allows normalization of pollution values, prevents a scenario where more sources equals greater maximum pollution. Dont pass anything if you dont want it normalized.
     :param source_x: x-coordinate of source point
     :param source_y: y-coordinate of source point
@@ -281,7 +282,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     stack_x = [source_x]
     stack_y = [source_y]
 
-    Q = [10.]  # mass emitted per unit time ::: originially 10
+    Q = [pollution_val]  # mass emitted per unit time ::: originially 10
     H = [50.]  # [50., 50., 50.]  # stack height, m
     days = 10  # run the model for 365 days
     # --------------------------------------------------------------------------
@@ -353,64 +354,14 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length):
     return np.mean(C1, axis=2) * 1e6
 
 
-
-
-
-def create_points_using_atmospheric_model_random_locations(number_of_sources, side_length, number_of_maps,
-                                                           normalized=False):
+def create_points_using_atmospheric_model_random_locations(number_of_sources, side_length, pollution_val, number_of_maps,
+                                                           normalized=False ):
     """
      Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
      pollution values given the number of pollution sources.
 
      The positions of the sources are assigned randomly
-     :param normalized: Flag to set normalized to True or False
-     :param number_of_sources: The number of pollution sources
-     :param side_length: side length of point map square
-     :param number_of_maps: number of different pollution maps used
-     :return:
-     """
-    pollution_maps = {}
-
-    x = 5
-
-    for map in range(0, number_of_maps):  # loops through for each map
-
-
-        pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
-                                                                 np.random.randint(250, side_length * 10 + 250),
-                                                                 side_length)  # Creates matrix of pollution using first source
-        for i in range(1, number_of_sources):
-
-
-            pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
-                                                                      np.random.randint(250,
-                                                                                        side_length * 10 + 250),
-                                                                      side_length)  # adds additional pollution sources to pollution values
-        max_poll_value = np.amax(pollution_values)
-        label_index = 0
-        point_map = {}
-        for i in range(0, side_length):  # assigns pollution values to points
-            y = 5
-            for j in range(0, side_length):
-                if normalized: #normalizes the pollution value if true
-                    point_map[label_index] = Point(label_index, pollution_values[i][j]/max_poll_value*100, x, y)
-                else:
-                    point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
-                label_index += 1
-                y += 10
-            x += 10
-        pollution_maps[map] = point_map
-
-    return pollution_maps
-
-
-def create_points_using_atmospheric_model_random_locations_and_poll_values(number_of_sources, side_length, number_of_maps,
-                                                           normalized=False):
-    """
-     Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
-     pollution values given the number of pollution sources.
-
-     The positions of the sources are assigned randomly
+      :param pollution_val: Average pollution output of pollution source
      :param normalized: Flag to set normalized to True or False
      :param number_of_sources: The number of pollution sources
      :param side_length: side length of point map square
@@ -425,11 +376,13 @@ def create_points_using_atmospheric_model_random_locations_and_poll_values(numbe
 
         pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                  np.random.randint(250, side_length * 10 + 250),
+                                                                 pollution_val,
                                                                  side_length)  # Creates matrix of pollution using first source
         for i in range(1, number_of_sources):
             pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                       np.random.randint(250,
                                                                                         side_length * 10 + 250),
+                                                                      pollution_val,
                                                                       side_length)  # adds additional pollution sources to pollution values
         max_poll_value = np.amax(pollution_values)
         label_index = 0
@@ -438,7 +391,7 @@ def create_points_using_atmospheric_model_random_locations_and_poll_values(numbe
             y = 5
             for j in range(0, side_length):
                 if normalized:  # normalizes the pollution value if true
-                    point_map[label_index] = Point(label_index, pollution_values[i][j] / max_poll_value * 100, x, y)
+                    point_map[label_index] = Point(label_index, pollution_values[i][j] / max_poll_value * pollution_val, x, y)
                 else:
                     point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
                 label_index += 1
@@ -447,6 +400,58 @@ def create_points_using_atmospheric_model_random_locations_and_poll_values(numbe
         pollution_maps[map] = point_map
 
     return pollution_maps
+
+
+def create_points_using_atmospheric_model_random_locations_and_pollution_values(number_of_sources, side_length,
+                                                                           number_of_maps,
+                                                                           pollution_mean, pollution_dev):
+    """
+     Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
+     pollution values given the number of pollution sources.
+
+     The positions of the sources are assigned randomly. Also, the output of each pollution source is uniformly randomly assigned
+     around the mean with a specific deviation
+     :param pollution_mean: Average pollution output of pollution source
+     :param pollution_dev: Deviation of pollution. Interval is [mean-dev, mean + dev]
+     :param number_of_sources: The number of pollution sources
+     :param side_length: side length of point map square
+     :param number_of_maps: number of different pollution maps used
+     :return:
+     """
+    pollution_maps = {}
+
+    x = 5
+
+    for map in range(0, number_of_maps):  # loops through for each map
+
+        pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
+                                                                 np.random.randint(250, side_length * 10 + 250),
+                                                                 np.random.uniform(pollution_mean-pollution_dev,
+                                                                                   pollution_mean + pollution_dev),
+                                                                 pollution_mean,
+                                                                 side_length)  # Creates matrix of pollution using first source
+        for i in range(1, number_of_sources):
+            pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
+                                                                      np.random.randint(250,
+                                                                                        side_length * 10 + 250),
+                                                                      np.random.uniform(pollution_mean - pollution_dev,
+                                                                                        pollution_mean + pollution_dev),
+                                                                      side_length)  # adds additional pollution sources to pollution values
+        max_poll_value = np.amax(pollution_values)
+        label_index = 0
+        point_map = {}
+        for i in range(0, side_length):  # assigns pollution values to points
+            y = 5
+            for j in range(0, side_length):
+                point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+                label_index += 1
+                y += 10
+            x += 10
+        pollution_maps[map] = point_map
+
+    return pollution_maps
+
+
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False, alpha=None):
     """
@@ -797,22 +802,24 @@ def graph_error_based_on_different_number_sources(side_length, max_number_of_sou
     :return:
     """
     rmse_data = []
-    for current_num_sources in range(1, max_number_of_sources + 1): # loops through number of sources to be used
+    for current_num_sources in range(1, max_number_of_sources + 1):  # loops through number of sources to be used
         points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
                                                                         number_of_maps,
-                                                                        normalized_pollution_values) # creation of pollution points
+                                                                        normalized_pollution_values)  # creation of pollution points
         picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                  standard_deviation=error_of_measurment) # selecting known points
+                                                                  standard_deviation=error_of_measurment)  # selecting known points
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(np.random.randint(1e-05,
                                                                                                           100)), False,
-                                                                                    alpha=.1) # interpolating points with specific parameters
-        rmse_data.append(average_rmse_of_maps(interpolated_points)) # adding average rmse of interpolated points maps to a list of rmse data
+                                                                                    alpha=.1)  # interpolating points with specific parameters
+        rmse_data.append(average_rmse_of_maps(
+            interpolated_points))  # adding average rmse of interpolated points maps to a list of rmse data
 
         print("Source number:" + str(current_num_sources) + " Done")
         graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side_length, current_num_sources)
 
-    plot_bar_graph(range(1, max_number_of_sources + 1), rmse_data, x_label="number of sources", y_label="RMSE") # plots a bar graph of
+    plot_bar_graph(range(1, max_number_of_sources + 1), rmse_data, x_label="number of sources",
+                   y_label="RMSE")  # plots a bar graph of
     #                                                                                                            RMSE vs number of sources
 
 
@@ -825,7 +832,8 @@ def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side
         :param number_of_sources: number of pollution sources on graph
         :return: a heatmap of pollution values
         """
-    true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)  # initializing true values for pollution
+    true_pollution_points = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2,
+                                                                      0)  # initializing true values for pollution
     #                                                                                                 map
     num_of_maps = len(points)
     rmse_list = []
@@ -849,16 +857,20 @@ def graph_heatmap_best_and_worst_interpolation(points, interpolated_points, side
 
     graph_pollution_using_heat_map(true_pollution_points[min_label],
                                    "best true values" + ", Number of Sources = " + str(
-                                       number_of_sources), side_length) # graphs pollution heatmap of the best true pollution values
+                                       number_of_sources),
+                                   side_length)  # graphs pollution heatmap of the best true pollution values
     graph_pollution_using_heat_map(interpolated_points[min_label][0], "best interpolated values| RMSE = " + str(
-        truncate(min_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length) # graphs pollution heatmap of best
+        truncate(min_rmse, 3)) + ", Number of Sources = " + str(number_of_sources),
+                                   side_length)  # graphs pollution heatmap of best
     #                                                                                              interpolated pollution values
 
     graph_pollution_using_heat_map(true_pollution_points[max_label],
                                    "worst true values" + ", Number of Sources = " + str(
-                                       number_of_sources), side_length) # graphs heatmap of worst "true" pollution values
+                                       number_of_sources),
+                                   side_length)  # graphs heatmap of worst "true" pollution values
     graph_pollution_using_heat_map(interpolated_points[max_label][0], "worst interpolated values| RMSE = " + str(
-        truncate(max_rmse, 3)) + ", Number of Sources = " + str(number_of_sources), side_length) # graphs heatmap of worst
+        truncate(max_rmse, 3)) + ", Number of Sources = " + str(number_of_sources),
+                                   side_length)  # graphs heatmap of worst
     #                                                                                              interpolated pollutino values
 
 
@@ -874,9 +886,12 @@ def truncate(number, digits) -> float:
 
 
 def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_measurments, max_number_of_sources,
-                               number_of_maps, num_picked_points, normalized_pollution_values):
+                               number_of_maps, num_picked_points, normalize_pollution_values, pollution_mean,
+                               pollution_deviation):
     """
 
+    :param pollution_deviation: Deviation of pollution source outputs
+    :param pollution_mean: Output amount of each pollution source
     :param lower_alpha: Lower bound of alpha
     :param higher_alpha: Higher bound of alpha
     :param side_length: Number of points on one side of the point square
@@ -884,25 +899,30 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     :param max_number_of_sources: Max number of sources
     :param number_of_maps: Number of simulations for each parameter
     :param num_picked_points: Number of points that will be measured before interpolation
-    :param normalized_pollution_values:  True or False
+    :param normalize_pollution_values:  True or False
     :return:
     """
     rmse_data = {}
     tree = 0
-    for current_alpha in np.arange(lower_alpha, higher_alpha, .1): #loops through all alphas
-        current_alpha = truncate(current_alpha, 3)#fixes floating point precision
+    for current_alpha in np.arange(lower_alpha, higher_alpha, .1):  # loops through all alphas
+        current_alpha = truncate(current_alpha, 3)  # fixes floating point precision
         rmse_data_for_certain_alpha = {}
-        for current_num_sources in range(1, max_number_of_sources + 1): #loops through all numbers of sources
-            points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
-                                                                            number_of_maps,
-                                                                            normalized=normalized_pollution_values) #creates points
+        for current_num_sources in range(1, max_number_of_sources + 1):  # loops through all numbers of sources
+            if pollution_deviation == 0: #decides if there will be any pollution deviation or not
+                points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
+                                                                                number_of_maps, pollution_mean,
+                                                                                normalized=normalize_pollution_values)  # creates points with no deviation
+            else:
+                points = create_points_using_atmospheric_model_random_locations_and_pollution_values(current_num_sources, side_length,
+                                                                               number_of_maps, pollution_mean, pollution_deviation,
+                                                                               normalized=normalize_pollution_values) #creates points with deviation
             picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                      standard_deviation=std_of_measurments) #measures points
+                                                                      standard_deviation=std_of_measurments)  # measures points
             interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                         RBF(np.random.randint(1e-05,
                                                                                                               100)),
                                                                                         False,
-                                                                                        alpha=current_alpha) #interpolates points
+                                                                                        alpha=current_alpha)  # interpolates points
             rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
             print("Source number:" + str(current_num_sources) + " Done")
 
@@ -913,7 +933,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     min_alpha = None
     avg_rmse_map_of_all_alphas = {}
 
-    for alpha, rmse_list in rmse_data.items(): # finds best alpha that got the least rmse
+    for alpha, rmse_list in rmse_data.items():  # finds best alpha that got the least rmse
         sum = 0
         for value in rmse_list.values():
             sum += value
@@ -922,7 +942,8 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
             min_rmse = avg_rmse
             min_alpha = alpha
 
-    for num_sources in range(1, max_number_of_sources + 1): # averages rmse values from all alphas for each number of sources
+    for num_sources in range(1,
+                             max_number_of_sources + 1):  # averages rmse values from all alphas for each number of sources
         sum = 0
         for alpha in np.arange(lower_alpha, higher_alpha, .1):
             alpha = truncate(alpha, 3)
@@ -930,7 +951,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
         mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
         avg_rmse_map_of_all_alphas[num_sources] = mean
 
-    x_cord = range(1, max_number_of_sources + 1) #formatting for graphing
+    x_cord = range(1, max_number_of_sources + 1)  # formatting for graphing
     y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
     y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
 
@@ -957,7 +978,6 @@ def put_y_values_in_right_order(map):
     for key in key_list:
         y_cord.append(map[key])
     return y_cord
-
 
 
 """
@@ -992,8 +1012,6 @@ Testing Methods
 
 experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
-                           normalized_pollution_values=False)
+                           normalize_pollution_values=False, pollution_mean= 100)
 
-# experiment_test_all_alphas(lower_alpha=.1, higher_alpha=.5, side_length=40, std_of_measurments=5,
-#                            max_number_of_sources=5, number_of_maps=10, num_picked_points=20,
-#                            normalized_pollution_values=True)
+ex
