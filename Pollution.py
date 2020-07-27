@@ -428,16 +428,18 @@ def create_points_using_atmospheric_model_random_locations_and_pollution_values(
 
         pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                  np.random.randint(250, side_length * 10 + 250),
-                                                                 np.random.uniform(pollution_mean - pollution_dev *pollution_mean,
-                                                                                   pollution_mean + pollution_dev * pollution_mean),
+                                                                 np.random.uniform(
+                                                                     pollution_mean - pollution_dev * pollution_mean,
+                                                                     pollution_mean + pollution_dev * pollution_mean),
                                                                  pollution_mean,
                                                                  side_length)  # Creates matrix of pollution using first source
         for i in range(1, number_of_sources):
             pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                       np.random.randint(250,
                                                                                         side_length * 10 + 250),
-                                                                      np.random.uniform(pollution_mean - pollution_dev * pollution_mean,
-                                                                                        pollution_mean + pollution_dev * pollution_mean),
+                                                                      np.random.uniform(
+                                                                          pollution_mean - pollution_dev * pollution_mean,
+                                                                          pollution_mean + pollution_dev * pollution_mean),
                                                                       side_length)  # adds additional pollution sources to pollution values
         label_index = 0
         point_map = {}
@@ -790,25 +792,33 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 
 def graph_error_based_on_different_number_sources(side_length, max_number_of_sources, number_of_maps, num_picked_points,
-                                                  error_of_measurment,
-                                                  normalized_pollution_values=False):
+                                                  error_of_measurement, pollution_mean, pollution_deviation,
+                                                  normalize_pollution_values=False):
     """
     Method to test how RMSE varies when changing the number of pollution sources on map
+    :param pollution_deviation: Deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
+    :param pollution_mean: Output amount of each pollution source
     :param side_length: side length of pollution square map
     :param max_number_of_sources: maximum number of sources used
     :param number_of_maps: number of maps used in calculations
     :param num_picked_points: number of known pollution values on graph
-    :param error_of_measurment: standard deviation of error in measurement
-    :param normalized_pollution_values: decides whether to normalize the pollution values or not
+    :param error_of_measurement: standard deviation of error in measurement
+    :param normalize_pollution_values: decides whether to normalize the pollution values or not
     :return:
     """
     rmse_data = []
     for current_num_sources in range(1, max_number_of_sources + 1):  # loops through number of sources to be used
-        points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
-                                                                        number_of_maps,
-                                                                        normalized_pollution_values)  # creation of pollution points
+
+        if pollution_deviation == 0:  # decides if there will be any pollution deviation or not
+            points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
+                                                                            number_of_maps, pollution_mean,
+                                                                            normalized=normalize_pollution_values)  # creates points with no deviation
+        else:
+            points = create_points_using_atmospheric_model_random_locations_and_pollution_values(
+                current_num_sources, side_length,
+                number_of_maps, pollution_mean, pollution_deviation)  # creates points with deviation
         picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                  standard_deviation=error_of_measurment)  # selecting known points
+                                                                  standard_deviation=error_of_measurement)  # selecting known points
         interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
                                                                                     RBF(np.random.randint(1e-05,
                                                                                                           100)), False,
@@ -1004,13 +1014,13 @@ Testing Methods
 # side_length = 40
 #
 # points = create_points_using_atmospheric_model([200], [500], side_length, 1)
-b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
+# b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-# graph_error_based_on_different_number_sources(number_of_maps=5, max_number_of_sources=10, side_length=40,
-#                                               num_picked_points=150, error_of_measurment=5,
-#                                               normalized_pollution_values=True)
+graph_error_based_on_different_number_sources(number_of_maps=5, max_number_of_sources=10, side_length=40,
+                                              num_picked_points=150, error_of_measurement=5, pollution_mean=100,
+                                              pollution_deviation=.1, normalize_pollution_values=False)
 
-experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
-                           max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
-                           normalize_pollution_values=False, pollution_mean=100, pollution_deviation=.1)
+# experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
+#                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
+#                            normalize_pollution_values=False, pollution_mean=100, pollution_deviation=.1)
