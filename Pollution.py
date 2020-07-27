@@ -404,6 +404,49 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
     return pollution_maps
 
 
+def create_points_using_atmospheric_model_random_locations_and_poll_values(number_of_sources, side_length, number_of_maps,
+                                                           normalized=False):
+    """
+     Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
+     pollution values given the number of pollution sources.
+
+     The positions of the sources are assigned randomly
+     :param normalized: Flag to set normalized to True or False
+     :param number_of_sources: The number of pollution sources
+     :param side_length: side length of point map square
+     :param number_of_maps: number of different pollution maps used
+     :return:
+     """
+    pollution_maps = {}
+
+    x = 5
+
+    for map in range(0, number_of_maps):  # loops through for each map
+
+        pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
+                                                                 np.random.randint(250, side_length * 10 + 250),
+                                                                 side_length)  # Creates matrix of pollution using first source
+        for i in range(1, number_of_sources):
+            pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
+                                                                      np.random.randint(250,
+                                                                                        side_length * 10 + 250),
+                                                                      side_length)  # adds additional pollution sources to pollution values
+        max_poll_value = np.amax(pollution_values)
+        label_index = 0
+        point_map = {}
+        for i in range(0, side_length):  # assigns pollution values to points
+            y = 5
+            for j in range(0, side_length):
+                if normalized:  # normalizes the pollution value if true
+                    point_map[label_index] = Point(label_index, pollution_values[i][j] / max_poll_value * 100, x, y)
+                else:
+                    point_map[label_index] = Point(label_index, pollution_values[i][j], x, y)
+                label_index += 1
+                y += 10
+            x += 10
+        pollution_maps[map] = point_map
+
+    return pollution_maps
 def interpolate_points_using_positions(known_points, wanted_point_positions, kernel=None,
                                        fixed=False, alpha=None):
     """
@@ -949,7 +992,7 @@ Testing Methods
 
 experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
-                           normalized_pollution_values=True)
+                           normalized_pollution_values=False)
 
 # experiment_test_all_alphas(lower_alpha=.1, higher_alpha=.5, side_length=40, std_of_measurments=5,
 #                            max_number_of_sources=5, number_of_maps=10, num_picked_points=20,
