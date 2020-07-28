@@ -214,8 +214,8 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
 def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollution_val):
     """
     Creates a model of realistic pollution values given a source point
+    :param pollution_val: Pollution output per sec for source
     :param side_length: Number of points on each side of the square location
-    :param number_of_sources: Allows normalization of pollution values, prevents a scenario where more sources equals greater maximum pollution. Dont pass anything if you dont want it normalized.
     :param source_x: x-coordinate of source point
     :param source_y: y-coordinate of source point
     :return: matrix of realistic pollution values
@@ -428,19 +428,17 @@ def create_points_using_atmospheric_model_random_locations_and_pollution_values(
 
         pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                  np.random.randint(250, side_length * 10 + 250),
+                                                                 side_length,
                                                                  np.random.uniform(
                                                                      pollution_mean - pollution_dev * pollution_mean,
-                                                                     pollution_mean + pollution_dev * pollution_mean),
-                                                                 pollution_mean,
-                                                                 side_length)  # Creates matrix of pollution using first source
+                                                                     pollution_mean + pollution_dev * pollution_mean))# Creates matrix of pollution using first source
         for i in range(1, number_of_sources):
             pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
-                                                                      np.random.randint(250,
-                                                                                        side_length * 10 + 250),
+                                                                      np.random.randint(250, side_length * 10 + 250),
+                                                                      side_length,
                                                                       np.random.uniform(
                                                                           pollution_mean - pollution_dev * pollution_mean,
-                                                                          pollution_mean + pollution_dev * pollution_mean),
-                                                                      side_length)  # adds additional pollution sources to pollution values
+                                                                          pollution_mean + pollution_dev * pollution_mean))# adds additional pollution sources to pollution values
         label_index = 0
         point_map = {}
         for i in range(0, side_length):  # assigns pollution values to points
@@ -898,9 +896,10 @@ def truncate(number, digits) -> float:
 
 def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_measurments, max_number_of_sources,
                                number_of_maps, num_picked_points, normalize_pollution_values, pollution_mean,
-                               pollution_deviation):
+                               pollution_deviation, title):
     """
 
+    :param title: Title of graph
     :param pollution_deviation: Deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
     :param pollution_mean: Output amount of each pollution source
     :param lower_alpha: Lower bound of alpha
@@ -970,7 +969,7 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     plt.plot(x_cord, y1_cord, "ro-", x_cord, y2_cord, "go-")
     plt.xlabel("Number of Sources")
     plt.ylabel("RSME")
-    plt.title("Best Alpha = " + str(min_alpha))
+    plt.title(title)
     plt.show()
     print("done")
 
@@ -1017,10 +1016,10 @@ Testing Methods
 # b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-graph_error_based_on_different_number_sources(number_of_maps=5, max_number_of_sources=10, side_length=40,
-                                              num_picked_points=150, error_of_measurement=5, pollution_mean=100,
-                                              pollution_deviation=.1, normalize_pollution_values=False)
+# graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=1, side_length=40,
+#                                               num_picked_points=150, error_of_measurement=5, pollution_mean=10,
+#                                               pollution_deviation=.5, normalize_pollution_values=False)
 
-# experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
-#                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
-#                            normalize_pollution_values=False, pollution_mean=100, pollution_deviation=.1)
+experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
+                           max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
+                           normalize_pollution_values=False, pollution_mean=100, pollution_deviation=.5, title = "pollution deviation= " + str(.5))
