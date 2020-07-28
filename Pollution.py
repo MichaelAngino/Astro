@@ -896,11 +896,12 @@ def truncate(number, digits) -> float:
 
 def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_measurments, max_number_of_sources,
                                number_of_maps, num_picked_points, normalize_pollution_values, pollution_mean,
-                               pollution_deviation, title):
+                               lower_pollution_deviation, higher_pollution_deviation, title):
     """
 
     :param title: Title of graph
-    :param pollution_deviation: Deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
+    :param lower_pollution_deviation: lower bound for deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
+    :param higher_pollution_deviation: higher bound for deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
     :param pollution_mean: Output amount of each pollution source
     :param lower_alpha: Lower bound of alpha
     :param higher_alpha: Higher bound of alpha
@@ -913,65 +914,70 @@ def experiment_test_all_alphas(lower_alpha, higher_alpha, side_length, std_of_me
     :return:
     """
     rmse_data = {}
-    tree = 0
-    for current_alpha in np.arange(lower_alpha, higher_alpha, .1):  # loops through all alphas
-        current_alpha = truncate(current_alpha, 3)  # fixes floating point precision
-        rmse_data_for_certain_alpha = {}
-        for current_num_sources in range(1, max_number_of_sources + 1):  # loops through all numbers of sources
-            if pollution_deviation == 0:  # decides if there will be any pollution deviation or not
-                points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
-                                                                                number_of_maps, pollution_mean,
-                                                                                normalized=normalize_pollution_values)  # creates points with no deviation
-            else:
-                points = create_points_using_atmospheric_model_random_locations_and_pollution_values(
-                    current_num_sources, side_length,
-                    number_of_maps, pollution_mean, pollution_deviation)  # creates points with deviation
-            picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
-                                                                      standard_deviation=std_of_measurments)  # measures points
-            interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
-                                                                                        RBF(np.random.randint(1e-05,
-                                                                                                              100)),
-                                                                                        False,
-                                                                                        alpha=current_alpha)  # interpolates points
-            rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
-            print("Source number:" + str(current_num_sources) + " Done")
+    improvements = [] # stores improvement factors for each pollution deviation value
+    colors_list = ["ro-", "go-", "bo-", "ko-", "yo-", "co-"]
+    for current_pollution_deviation in np.arange(lower_pollution_deviation, higher_pollution_deviation+.1, .1):
+        for current_alpha in np.arange(lower_alpha, higher_alpha+.1, .1):  # loops through all alphas
+            current_alpha = truncate(current_alpha, 3)  # fixes floating point precision
+            rmse_data_for_certain_alpha = {}
+            for current_num_sources in range(1, max_number_of_sources + 1):  # loops through all numbers of sources
+                if current_pollution_deviation == 0:  # decides if there will be any pollution deviation or not
+                    points = create_points_using_atmospheric_model_random_locations(current_num_sources, side_length,
+                                                                                    number_of_maps, pollution_mean,
+                                                                                    normalized=normalize_pollution_values)  # creates points with no deviation
+                else:
+                    points = create_points_using_atmospheric_model_random_locations_and_pollution_values(
+                        current_num_sources, side_length,
+                        number_of_maps, pollution_mean, current_pollution_deviation)  # creates points with deviation
+                picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
+                                                                          standard_deviation=std_of_measurments)  # measures points
+                interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                            RBF(np.random.randint(1e-05,
+                                                                                                                  100)),
+                                                                                            False,
+                                                                                            alpha=current_alpha)  # interpolates points
+                rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
+                print("Source number:" + str(current_num_sources) + " Done")
 
-        rmse_data[current_alpha] = rmse_data_for_certain_alpha
-        print("Alpha:" + str(current_alpha) + " Done")
+            rmse_data[current_alpha] = rmse_data_for_certain_alpha
+            print("Alpha:" + str(current_alpha) + " Done")
 
-    min_rmse = math.inf
-    min_alpha = None
-    avg_rmse_map_of_all_alphas = {}
+        min_rmse = math.inf
+        min_alpha = None
+        avg_rmse_map_of_all_alphas = {}
 
-    for alpha, rmse_list in rmse_data.items():  # finds best alpha that got the least rmse
-        sum = 0
-        for value in rmse_list.values():
-            sum += value
-        avg_rmse = sum / len(rmse_list.values())
-        if min_rmse > avg_rmse:
-            min_rmse = avg_rmse
-            min_alpha = alpha
+        for alpha, rmse_list in rmse_data.items():  # finds best alpha that got the least rmse
+            sum = 0
+            for value in rmse_list.values():
+                sum += value
+            avg_rmse = sum / len(rmse_list.values())
+            if min_rmse > avg_rmse:
+                min_rmse = avg_rmse
+                min_alpha = alpha
 
-    for num_sources in range(1,
-                             max_number_of_sources + 1):  # averages rmse values from all alphas for each number of sources
-        sum = 0
-        for alpha in np.arange(lower_alpha, higher_alpha, .1):
-            alpha = truncate(alpha, 3)
-            sum += rmse_data[alpha][num_sources]
-        mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
-        avg_rmse_map_of_all_alphas[num_sources] = mean
+        for num_sources in range(1,
+                                 max_number_of_sources + 1):  # averages rmse values from all alphas for each number of sources
+            sum = 0
+            for alpha in np.arange(lower_alpha, higher_alpha, .1):
+                alpha = truncate(alpha, 3)
+                sum += rmse_data[alpha][num_sources]
+            mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
+            avg_rmse_map_of_all_alphas[num_sources] = mean
 
+        y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
+        y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
+        improvement_factors = [y2_cord[i] / y1_cord[i] for i in range(0, len(y1_cord))]
+        improvements.append(improvement_factors)
+        print("Pollution Deviation: " + str(current_pollution_deviation) + " done")
+
+    assert(len(colors_list) == len(improvements))
     x_cord = range(1, max_number_of_sources + 1)  # formatting for graphing
-    y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
-    y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
-
-    # plt.scatter(x_cord, y1_cord, "ro", x_cord, y2_cord, "go")
-    plt.plot(x_cord, y1_cord, "ro-", x_cord, y2_cord, "go-")
+    for i in range(len(improvements)):
+        plt.scatter(x_cord, improvements[i], colors_list[i][:2])
+        plt.plot(x_cord, improvements[i], colors_list[i])
     plt.xlabel("Number of Sources")
-    plt.ylabel("RSME")
+    plt.ylabel("Improvement Factor of Robust Interpolation")
     plt.title(title)
-    plt.show()
-    print("done")
 
 
 def put_y_values_in_right_order(map):
@@ -1022,4 +1028,5 @@ Testing Methods
 
 experiment_test_all_alphas(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
-                           normalize_pollution_values=False, pollution_mean=100, pollution_deviation=.5, title = "pollution deviation= " + str(.5))
+                           normalize_pollution_values=False, pollution_mean=100, lower_pollution_deviation=.1,
+                           higher_pollution_deviation=.6, title="pollution deviation= " + str(.5))
