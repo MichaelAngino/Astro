@@ -211,9 +211,12 @@ def create_covariance_matrix(points, length_scale, standard_deviation):
     return covariance
 
 
-def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollution_val):
+def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollution_val, wind_speed_value=5.,
+                                          fluctuating_wind_flag=False):
     """
     Creates a model of realistic pollution values given a source point
+    :param fluctuating_wind_flag: Set if the wind should be fluctating  or not
+    :param wind_speed_value: Speed of wind Default is 5
     :param pollution_val: Pollution output per sec for source
     :param side_length: Number of points on each side of the square location
     :param source_x: x-coordinate of source point
@@ -276,7 +279,11 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollu
     x_slice = 26  # position (1-50) to take the slice in the x-direction
     y_slice = 1  # position (1-50) to plot concentrations vs time
 
-    wind = CONSTANT_WIND
+    if fluctuating_wind_flag:
+        wind = FLUCTUATING_WIND
+    else:
+        wind = CONSTANT_WIND
+
     stacks = ONE_STACK
     # only using one pollution source point (one stack)
     stack_x = [source_x]
@@ -323,7 +330,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollu
         sys.exit()
 
     # Set the wind based on input flags++++++++++++++++++++++++++++++++++++++++
-    wind_speed = 5. * np.ones((days * 24, 1))  # m/s
+    wind_speed = wind_speed_value * np.ones((days * 24, 1))  # m/s
     if wind == CONSTANT_WIND:
         wind_dir = 0. * np.ones((days * 24, 1))
         wind_dir_str = 'Constant wind'
@@ -356,12 +363,15 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollu
 
 def create_points_using_atmospheric_model_random_locations(number_of_sources, side_length, pollution_val,
                                                            number_of_maps,
-                                                           normalized=False):
+                                                           normalized=False, wind_speed=5.,
+                                                           fluctuating_wind_flag=False):
     """
      Returns a map of maps of pollution points using the Gaussian Atmospheric Dispersion Model that creates realistic
      pollution values given the number of pollution sources.
 
      The positions of the sources are assigned randomly
+      :param fluctuating_wind_flag:
+      :param wind_speed:
       :param pollution_val: Average pollution output of pollution source
      :param normalized: Flag to set normalized to True or False
      :param number_of_sources: The number of pollution sources
@@ -378,14 +388,19 @@ def create_points_using_atmospheric_model_random_locations(number_of_sources, si
         pollution_values = gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                  np.random.randint(250, side_length * 10 + 250),
                                                                  side_length,
-                                                                 pollution_val
+                                                                 pollution_val,
+                                                                 wind_speed_value=wind_speed,
+                                                                 fluctuating_wind_flag=fluctuating_wind_flag
                                                                  )  # Creates matrix of pollution using first source
         for i in range(1, number_of_sources):
             pollution_values += gaussian_atmospheric_dispersion_model(np.random.randint(0, side_length * 10),
                                                                       np.random.randint(250,
                                                                                         side_length * 10 + 250),
                                                                       side_length,
-                                                                      pollution_val)  # adds additional pollution sources to pollution values
+                                                                      pollution_val,
+                                                                      wind_speed_value=wind_speed,
+                                                                      fluctuating_wind_flag=fluctuating_wind_flag
+                                                                      )  # adds additional pollution sources to pollution values
         max_poll_value = np.amax(pollution_values)
         label_index = 0
         point_map = {}
@@ -793,9 +808,13 @@ def graph_pollution_using_heat_map(points, title, side_length):
 
 def graph_error_based_on_different_number_sources(side_length, max_number_of_sources, number_of_maps, num_picked_points,
                                                   error_of_measurement, pollution_mean, pollution_deviation,
-                                                  normalize_pollution_values=False):
+                                                  normalize_pollution_values=False, fluctuating_wind_flag=False,
+                                                  wind_speed=5.):
     """
     Method to test how RMSE varies when changing the number of pollution sources on map
+    WIND SPEED and fluctating wind only work with deviation of 0
+    :param wind_speed:
+    :param fluctuating_wind_flag:
     :param pollution_deviation: Deviation of pollution source outputs possible pollution values is [mean-mean*dev, mean+mean*dev
     :param pollution_mean: Output amount of each pollution source
     :param side_length: side length of pollution square map
@@ -810,10 +829,13 @@ def graph_error_based_on_different_number_sources(side_length, max_number_of_sou
     for current_num_sources in range(1, max_number_of_sources + 1):  # loops through number of sources to be used
 
         if pollution_deviation == 0:  # decides if there will be any pollution deviation or not
-            points = create_points_using_atmospheric_model_random_locations(number_of_sources=current_num_sources,side_length= side_length,
+            points = create_points_using_atmospheric_model_random_locations(number_of_sources=current_num_sources,
+                                                                            side_length=side_length,
                                                                             pollution_val=pollution_mean,
                                                                             number_of_maps=number_of_maps,
-                                                                            normalized=normalize_pollution_values)  # creates points with no deviation
+                                                                            normalized=normalize_pollution_values,
+                                                                            fluctuating_wind_flag=fluctuating_wind_flag,
+                                                                            wind_speed=wind_speed)  # creates points with no deviation
         else:
             points = create_points_using_atmospheric_model_random_locations_and_pollution_values(
                 number_of_sources=current_num_sources, side_length=side_length, pollution_mean=pollution_mean,
@@ -924,6 +946,9 @@ def experiment_test_all_alphas_and_deviations(lower_alpha, higher_alpha, side_le
     rmse_data = {}
     improvements = []  # stores improvement factors for each pollution deviation value
     colors_list = ["ro-", "go-", "bo-", "ko-", "yo-"]  # , "co-"]
+
+    if len(colors_list) != len(np.arange(lower_pollution_deviation, higher_pollution_deviation + .1, .1)):
+        raise Exception("Color list does not equal length of possible deviations. Manually change length of color list")
     for current_pollution_deviation in np.arange(lower_pollution_deviation, higher_pollution_deviation + .1, .1):
         current_pollution_deviation = truncate(current_pollution_deviation, 3)
         for current_alpha in np.arange(lower_alpha, higher_alpha + .1, .1):  # loops through all alphas
@@ -993,6 +1018,7 @@ def experiment_test_all_alphas_and_deviations(lower_alpha, higher_alpha, side_le
     plt.title(title)
     plt.legend()
     plt.show()
+
 
 def experiment_test_all_alphas_specific_deviation(lower_alpha, higher_alpha, side_length, std_of_measurments,
                                                   max_number_of_sources,
@@ -1091,6 +1117,104 @@ def put_y_values_in_right_order(map):
     return y_cord
 
 
+def experiment_test_all_alphas_and_wind_speed(lower_alpha, higher_alpha, side_length, std_of_measurments,
+                                              max_number_of_sources,
+                                              number_of_maps, num_picked_points, normalize_pollution_values,
+                                              pollution_mean,
+                                              low_wind_speed, high_wind_speed, fluctuating_wind_flag, title):
+    """
+    Finds improvement factor between average alpha and best alpha
+
+
+
+    :param fluctuating_wind_flag:
+    :param high_wind_speed:
+    :param low_wind_speed:
+    :param title: Title of graph
+    :param pollution_mean: Output amount of each pollution source
+    :param lower_alpha: Lower bound of alpha
+    :param higher_alpha: Higher bound of alpha
+    :param side_length: Number of points on one side of the point square
+    :param std_of_measurments: Standard deviation of pollution measurments
+    :param max_number_of_sources: Max number of sources
+    :param number_of_maps: Number of simulations for each parameter
+    :param num_picked_points: Number of points that will be measured before interpolation
+    :param normalize_pollution_values:  True or False (Only applies for the constant pollution case where pollution_deviation = 0)
+    :return:
+    """
+    rmse_data = {}
+    improvements = []  # stores improvement factors for each pollution deviation value
+    colors_list = ["ro-", "go-", "bo-", "ko-", "yo-"]  # , "co-"]
+
+    if len(colors_list) != len(np.arange(low_wind_speed, high_wind_speed + 2, 2)):
+        raise Exception("Color list does not equal length of possible deviations. Manually change length of color list")
+    for current_wind_speed in np.arange(low_wind_speed, high_wind_speed + 2, 2):
+        current_wind_speed = truncate(current_wind_speed, 3)
+        for current_alpha in np.arange(lower_alpha, higher_alpha + .1, .1):  # loops through all alphas
+            current_alpha = truncate(current_alpha, 3)  # fixes floating point precision
+            rmse_data_for_certain_alpha = {}
+            for current_num_sources in range(1, max_number_of_sources + 1):  # loops through all numbers of sources
+
+                points = create_points_using_atmospheric_model_random_locations(
+                    number_of_sources=current_num_sources, side_length=side_length,
+                    number_of_maps=number_of_maps, pollution_val=pollution_mean,
+                    normalized=normalize_pollution_values, wind_speed=current_wind_speed,
+                    fluctuating_wind_flag=fluctuating_wind_flag)  # creates points with no deviation
+
+                picked_points = pick_uniform_random_points_on_map_of_maps(points, num_picked_points,
+                                                                          standard_deviation=std_of_measurments)  # measures points
+                interpolated_points = interpolate_unknown_points_of_a_map_of_maps_of_points(picked_points, points,
+                                                                                            RBF(np.random.randint(1e-05,
+                                                                                                                  100)),
+                                                                                            False,
+                                                                                            alpha=current_alpha)  # interpolates points
+                rmse_data_for_certain_alpha[current_num_sources] = average_rmse_of_maps(interpolated_points)
+                print("Source number:" + str(current_num_sources) + " Done")
+
+            rmse_data[current_alpha] = rmse_data_for_certain_alpha
+            print("Alpha:" + str(current_alpha) + " Done")
+        print("Wind Speed: " + str(current_wind_speed) + " Done")
+        min_rmse = math.inf
+        min_alpha = None
+        avg_rmse_map_of_all_alphas = {}
+
+        for alpha, rmse_list in rmse_data.items():  # finds best alpha that got the least rmse
+            sum = 0
+            for value in rmse_list.values():
+                sum += value
+            avg_rmse = sum / len(rmse_list.values())
+            if min_rmse > avg_rmse:
+                min_rmse = avg_rmse
+                min_alpha = alpha
+
+        for num_sources in range(1,
+                                 max_number_of_sources + 1):  # averages rmse values from all alphas for each number of sources
+            sum = 0
+            for alpha in np.arange(lower_alpha, higher_alpha, .1):
+                alpha = truncate(alpha, 3)
+                sum += rmse_data[alpha][num_sources]
+            mean = sum / len(np.arange(lower_alpha, higher_alpha, .1))
+            avg_rmse_map_of_all_alphas[num_sources] = mean
+
+        y1_cord = put_y_values_in_right_order(rmse_data[min_alpha])
+        y2_cord = put_y_values_in_right_order(avg_rmse_map_of_all_alphas)
+        improvement_factors = [y2_cord[i] / y1_cord[i] for i in range(0, len(y1_cord))]
+        improvements.append(improvement_factors)
+
+    # assert(len(colors_list) == len(improvements))
+
+    plot_label = low_wind_speed
+    x_cord = range(1, max_number_of_sources + 1)  # formatting for graphing
+    for i in range(len(improvements)):
+        plt.plot(x_cord, improvements[i], colors_list[i], label="Deviation: " + str(truncate(plot_label, 1)))
+        plot_label += 2
+    plt.xlabel("Number of Sources")
+    plt.ylabel("Improvement Factor of Robust Interpolation")
+    plt.title(title)
+    plt.legend()
+    plt.show()
+
+
 """
 Testing Methods
 """
@@ -1117,9 +1241,10 @@ Testing Methods
 # b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-# graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=5, side_length=40,
-#                                               num_picked_points=150, error_of_measurement=5, pollution_mean=10,
-#                                               pollution_deviation=.5, normalize_pollution_values=False)
+graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=1, side_length=40,
+                                              num_picked_points=150, error_of_measurement=5, pollution_mean=10,
+                                              pollution_deviation=0, normalize_pollution_values=False, wind_speed=40,
+                                              fluctuating_wind_flag=False)
 
 # experiment_test_all_alphas_and_deviations(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
 #                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
@@ -1130,28 +1255,3 @@ Testing Methods
 #                            max_number_of_sources=5, number_of_maps=2, num_picked_points=100,
 #                            normalize_pollution_values=False, pollution_mean=100, lower_pollution_deviation=.1,
 #                            higher_pollution_deviation=.6, title="pollution deviation graph")
-
-
-experiment_test_all_alphas_specific_deviation(lower_alpha=.1, higher_alpha=.2, side_length=40, std_of_measurments=5,
-                                          max_number_of_sources=5, number_of_maps=1, num_picked_points=100,
-                                          normalize_pollution_values=False, pollution_mean=100,
-                                              title="100 maps, 100 picked points no deviation", pollution_deviation=0)
-
-experiment_test_all_alphas_specific_deviation(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
-                                              max_number_of_sources=5, number_of_maps=100, num_picked_points=50,
-                                              normalize_pollution_values=False, pollution_mean=100,
-                                              title="100 maps, 50 picked points no deviation", pollution_deviation=0)
-
-
-
-experiment_test_all_alphas_and_deviations(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
-                                          max_number_of_sources=5, number_of_maps=100, num_picked_points=100,
-                                          normalize_pollution_values=False, pollution_mean=100,
-                                          lower_pollution_deviation=.1,
-                                          higher_pollution_deviation=.5, title="100 maps, 100 picked points")
-
-experiment_test_all_alphas_and_deviations(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
-                                          max_number_of_sources=5, number_of_maps=100, num_picked_points=100,
-                                          normalize_pollution_values=False, pollution_mean=50,
-                                          lower_pollution_deviation=.1,
-                                          higher_pollution_deviation=.5, title="100 maps, 50 picked points")
