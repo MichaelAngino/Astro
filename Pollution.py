@@ -260,7 +260,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollu
 
     dxy = 10  # resolution of the model in both x and y directions
     dz = 10
-    x = np.mgrid[5:5 + (side_length - 1) * 10 + dxy:dxy]  # solve on a 5 km domain(old comment)
+    x = np.mgrid[5:5 + (side_length - 1) * 10 + dxy:dxy]  #grid on which it simulates the pollution
     y = x  # x-grid is same as y-grid
     ###########################################################################
 
@@ -1206,7 +1206,7 @@ def experiment_test_all_alphas_and_wind_speed(lower_alpha, higher_alpha, side_le
     plot_label = low_wind_speed
     x_cord = range(1, max_number_of_sources + 1)  # formatting for graphing
     for i in range(len(improvements)):
-        plt.plot(x_cord, improvements[i], colors_list[i], label="Deviation: " + str(truncate(plot_label, 1)))
+        plt.plot(x_cord, improvements[i], colors_list[i], label="Wind Speed: " + str(truncate(plot_label, 1)))
         plot_label += 2
     plt.xlabel("Number of Sources")
     plt.ylabel("Improvement Factor of Robust Interpolation")
@@ -1241,10 +1241,10 @@ Testing Methods
 # b = pick_uniform_random_points_on_map_of_maps(points, side_length ** 2, 0)
 # graph_pollution_using_heat_map(b[0], "Graph", side_length=side_length)
 
-graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=1, side_length=40,
-                                              num_picked_points=150, error_of_measurement=5, pollution_mean=10,
-                                              pollution_deviation=0, normalize_pollution_values=False, wind_speed=40,
-                                              fluctuating_wind_flag=False)
+# graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=1, side_length=40,
+#                                               num_picked_points=150, error_of_measurement=5, pollution_mean=10,
+#                                               pollution_deviation=0, normalize_pollution_values=False, wind_speed=1,
+#                                               fluctuating_wind_flag=True)
 
 # experiment_test_all_alphas_and_deviations(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
 #                            max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
@@ -1255,3 +1255,8 @@ graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_so
 #                            max_number_of_sources=5, number_of_maps=2, num_picked_points=100,
 #                            normalize_pollution_values=False, pollution_mean=100, lower_pollution_deviation=.1,
 #                            higher_pollution_deviation=.6, title="pollution deviation graph")
+
+experiment_test_all_alphas_and_wind_speed(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
+                                          max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
+                                          normalize_pollution_values=False, pollution_mean=100, low_wind_speed=2,high_wind_speed=10,
+                                          title="Wind Speed graph", fluctuating_wind_flag= False)
