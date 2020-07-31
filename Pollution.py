@@ -335,7 +335,7 @@ def gaussian_atmospheric_dispersion_model(source_x, source_y, side_length, pollu
         wind_dir = 0. * np.ones((days * 24, 1))
         wind_dir_str = 'Constant wind'
     elif wind == FLUCTUATING_WIND:
-        wind_dir = 360. * np.random.rand(days * 24, 1)
+        wind_dir = 70. * np.random.rand(days * 24, 1)
         wind_dir_str = 'Random wind'
     elif wind == PREVAILING_WIND:
         wind_dir = -np.sqrt(2.) * erfcinv(2. * np.random.rand(24 * days, 1)) * 40.  # norminv(rand(days.*24,1),0,40)
@@ -1243,7 +1243,7 @@ Testing Methods
 
 # graph_error_based_on_different_number_sources(number_of_maps=2, max_number_of_sources=1, side_length=40,
 #                                               num_picked_points=150, error_of_measurement=5, pollution_mean=10,
-#                                               pollution_deviation=0, normalize_pollution_values=False, wind_speed=1,
+#                                               pollution_deviation=0, normalize_pollution_values=False, wind_speed=5,
 #                                               fluctuating_wind_flag=True)
 
 # experiment_test_all_alphas_and_deviations(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
@@ -1259,4 +1259,4 @@ Testing Methods
 experiment_test_all_alphas_and_wind_speed(lower_alpha=.1, higher_alpha=2, side_length=40, std_of_measurments=5,
                                           max_number_of_sources=5, number_of_maps=20, num_picked_points=100,
                                           normalize_pollution_values=False, pollution_mean=100, low_wind_speed=2,high_wind_speed=10,
-                                          title="Wind Speed graph", fluctuating_wind_flag= False)
+                                          title="Fluctuating Wind Speed graph", fluctuating_wind_flag= True)
